@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Reporte Operativo de Demoras</title>
+  <!-- Tailwind CSS para estilizado móvil e industrial -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Estilos para sensación de App Nativa */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: text;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex justify-center items-start sm:py-6 sm:px-4 font-sans antialiased">
+
+  <!-- Contenedor Maqueta Móvil -->
+  <main class="w-full max-w-md bg-slate-950 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-screen sm:min-h-[860px] border border-slate-800 relative">
+    
+    <!-- Barra Superior / Header de la App -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-20">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
+            ⏱
+          </div>
+          <div>
+            <h1 class="font-bold text-base text-white tracking-wide leading-tight">Control de Demoras</h1>
+            <p class="text-xs text-slate-400">Reporte de Operaciones</p>
+          </div>
+        </div>
+        
+        <!-- Indicador Offline -->
+        <div class="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-[11px] font-semibold text-emerald-300">Offline Activo</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido Scrollable -->
+    <div class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
+      
+      <!-- TARJETA 1: Cabecera de Turno -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <span>📋</span> Datos del Turno
+          </h2>
+          <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Auto-guardado</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="col-span-2">
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Nombre del Operador</label>
+            <input type="text" id="inputNombre" placeholder="Ej. Carlos Mendoza" 
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Equipo Asignado</label>
+            <button type="button" id="btnAbrirEquipos" 
+              class="w-full text-left bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between hover:border-slate-600 transition-colors">
+              <div class="truncate">
+                <span id="labelEquipoId" class="font-bold text-amber-400 text-sm">CV-173</span>
+                <span id="labelEquipoTipo" class="text-slate-300 text-xs ml-1.5 truncate">CAMION VOLTEO</span>
+              </div>
+              <span class="text-slate-500 text-xs pl-2">▼</span>
+            </button>
+            <input type="hidden" id="inputEquipo" value="CV-173" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Turno</label>
+            <select id="selectTurno" 
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors">
+              <option value="Turno 1 (Día)">Turno 1ra (Día)</option>
+              <option value="Turno 2 (Noche)">Turno 2da (Noche)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha</label>
+            <input type="date" id="inputDia" 
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
+          </div>
+        </div>
+      </section>
+
+      <!-- TARJETA 2: Captura de Demoras -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <span>⚠️</span> Registrar Demora
+          </h2>
+          <span id="duracionBadge" class="text-[11px] font-semibold text-slate-400">0 min</span>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Horarios -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Inicial</label>
+              <input type="time" id="inputHoraInicio" 
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Final</label>
+              <input type="time" id="inputHoraFin" 
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
+            </div>
+          </div>
+
+          <!-- Selector de Código (Abre Modal de Catálogo) -->
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Código de Demora</label>
+            <button type="button" id="btnAbrirCatalogo" 
+              class="w-full text-left bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between hover:border-slate-600 transition-colors">
+              <div class="truncate">
+                <span id="labelCodigoActivo" class="font-bold text-amber-400 text-sm">200</span>
+                <span id="labelDescActiva" class="text-slate-300 text-xs ml-1.5 truncate">Ingreso/ salida de personal</span>
+              </div>
+              <span class="text-slate-500 text-xs pl-2">▼</span>
+            </button>
+          </div>
+
+          <!-- Comentarios -->
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Comentario u Observaciones</label>
+            <textarea id="inputComentario" rows="2" placeholder="Detalle la causa o evento..." 
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 resize-none"></textarea>
+          </div>
+
+          <!-- Botón Agregar Demora -->
+          <button type="button" id="btnAgregarDemora" 
+            class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-amber-500/30 transition-all shadow-sm">
+            <span>➕</span> Agregar a la Jornada
+          </button>
+        </div>
+      </section>
+
+      <!-- TARJETA 3: Demoras del Turno Activo -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">
+            Demoras Cargadas (<span id="contadorDemoras">0</span>)
+          </h2>
+          <span id="totalTiempoAcumulado" class="text-xs font-bold text-amber-400">Total: 0 hrs</span>
+        </div>
+
+        <!-- Lista vacía / Lista dinámica -->
+        <div id="contenedorListaDemoras" class="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-none">
+          <p id="mensajeListaVacia" class="text-center text-xs text-slate-500 py-6 italic">
+            No has agregado demoras en este turno aún.
+          </p>
+        </div>
+
+        <!-- Botón Guardar / Finalizar Turno -->
+        <div id="panelCierreTurno" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
+          <button type="button" id="btnFinalizarTurno" 
+            class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition-all">
+            <span>💾</span> Finalizar y Archivar Turno
+          </button>
+        </div>
+      </section>
+
+      <!-- TARJETA 4: Historial de Reportes Guardados (Listos para Enviar) -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span>📦</span> Reportes en Memoria Local (<span id="contadorHistorial">0</span>)
+          </h2>
+          <span class="text-[10px] text-slate-400">Listos p/ WhatsApp</span>
+        </div>
+
+        <div id="contenedorHistorial" class="space-y-2.5">
+          <p id="mensajeHistorialVacio" class="text-center text-xs text-slate-500 py-4 italic">
+            No hay reportes archivados pendientes.
+          </p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- MODAL CATÁLOGO DE DEMORAS -->
+    <div id="modalCatalogo" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-4 max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white">Catálogo de Demoras</h3>
+            <p class="text-xs text-slate-400">Selecciona el código correspondiente</p>
+          </div>
+          <button id="btnCerrarModal" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
+        </div>
+
+        <div id="listaOpcionesCatalogo" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none">
+          <!-- Generado vía JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CATÁLOGO DE EQUIPOS -->
+    <div id="modalEquipos" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-4 max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-base font-bold text-white">Catálogo de Equipos</h3>
+            <p class="text-xs text-slate-400">Selecciona el equipo asignado</p>
+          </div>
+          <button id="btnCerrarModalEquipos" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
+        </div>
+
+        <div id="listaOpcionesEquipos" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none">
+          <!-- Generado vía JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL VISOR RAW CSV -->
+    <div id="modalCSV" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-4 flex flex-col max-h-[80vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <h3 class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
+            <span>📄</span> Contenido CSV Nativo (UTF-8 BOM)
+          </h3>
+          <button id="btnCerrarCSV" class="text-slate-400 hover:text-white text-base">✕</button>
+        </div>
+        <pre id="codigoCSV" class="flex-1 my-3 bg-slate-950 p-3 rounded-xl text-[11px] font-mono text-emerald-300 overflow-x-auto overflow-y-auto border border-slate-800/80 whitespace-pre"></pre>
+        <button id="btnDescargarDesdeModal" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
+          Descargar Archivo .CSV
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- LÓGICA JAVASCRIPT: PERSISTENCIA OFFLINE, CSV & WHATSAPP -->
+  <script>
+    // Catálogo maestro estandarizado
+    const CATALOGO = [
+      // 2: DEMORAS OPERATIVAS (Stand By)
+      { codigo: '200', desc: 'Ingreso/ salida de personal', cat: 'Stand By' },
+      { codigo: '201', desc: 'Pueble/DDS', cat: 'Stand By' },
+      { codigo: '202', desc: 'Checklist de equipo', cat: 'Stand By' },
+      { codigo: '203', desc: 'Comida/ cena', cat: 'Stand By' },
+      { codigo: '204', desc: 'Traslado de personal areas operativas', cat: 'Stand By' },
+      { codigo: '205', desc: 'Capacitacion', cat: 'Stand By' },
+      { codigo: '206', desc: 'Lavado de equipo', cat: 'Stand By' },
+      { codigo: '207', desc: 'Orden y Limpieza', cat: 'Stand By' },
+      { codigo: '208', desc: 'Otras demoras operativas (1)', cat: 'Stand By' },
+      { codigo: '209', desc: 'Traslado de equipo a area operativa', cat: 'Stand By' },
+
+      // 3: DEMORAS OPERATIVAS (Delay)
+      { codigo: '300', desc: 'Traslado de equipo a taller (inicio de turno)', cat: 'Delay' },
+      { codigo: '301', desc: 'Traslado de equipo a otra area/mina', cat: 'Delay' },
+      { codigo: '302', desc: 'Traslado de area a taller por inoperatividad', cat: 'Delay' },
+      { codigo: '303', desc: 'Traslado de equipo a taller (Fin de turno)', cat: 'Delay' },
+      { codigo: '304', desc: 'Esperando instrucciones', cat: 'Delay' },
+      { codigo: '307', desc: 'Falta de materiales, insumos y accesorios', cat: 'Delay' },
+      { codigo: '308', desc: 'Falta de condiciones en areas', cat: 'Delay' },
+      { codigo: '309', desc: 'Falta de servicios (agua/aire)', cat: 'Delay' },
+      { codigo: '310', desc: 'Falta de energia', cat: 'Delay' },
+      { codigo: '311', desc: 'Falta de combustible', cat: 'Delay' },
+      { codigo: '312', desc: 'Instalacion de agua y energia', cat: 'Delay' },
+      { codigo: '313', desc: 'Ponchadura', cat: 'Delay' },
+      { codigo: '314', desc: 'Abastecimiento de combustible', cat: 'Delay' },
+      { codigo: '315', desc: 'Demoras en el traslado de equipo (Bloq.acceso)', cat: 'Delay' },
+      { codigo: '316', desc: 'Falta de operador', cat: 'Delay' },
+      { codigo: '318', desc: 'Esperando cargador', cat: 'Delay' },
+
+      // 4: DEMORAS NO OPERATIVAS (Maintenance)
+      { codigo: '400', desc: 'Equipo inoperativo', cat: 'Mantenimiento' },
+      { codigo: '401', desc: 'Falla mecánica', cat: 'Mantenimiento' },
+      { codigo: '402', desc: 'Falla electrica', cat: 'Mantenimiento' },
+      { codigo: '403', desc: 'Mantenimiento programado', cat: 'Mantenimiento' },
+      { codigo: '404', desc: 'Intervencion preventivo (Inicio de turno)', cat: 'Mantenimiento' },
+      { codigo: '405', desc: 'Intervencion correctivo', cat: 'Mantenimiento' },
+      { codigo: '406', desc: 'Daño operativo', cat: 'Mantenimiento' },
+      { codigo: '407', desc: 'Otras demoras no operativas', cat: 'Mantenimiento' },
+    ];
+
+    // Catálogo oficial de Equipos
+    const CATALOGO_EQUIPOS = [
+      { id: 'CV-173', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-174', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-175', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-176', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-178', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-180', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-181', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-182', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-183', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-184', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-185', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-186', tipo: 'CAMION VOLTEO' },
+      { id: 'GOND-03', tipo: 'GONDOLA' },
+      { id: 'GOND-04', tipo: 'GONDOLA' },
+      { id: 'GOND-05', tipo: 'GONDOLA' },
+      { id: '171', tipo: 'CAMION VOLTEO 14 M3' },
+      { id: '172', tipo: 'CAMION VOLTEO 14 M3' }
+    ];
+
+    const STORAGE_KEY_BORRADOR = 'app_demoras_borrador_v1';
+    const STORAGE_KEY_HISTORIAL = 'app_demoras_historial_v1';
+
+    // Estado en Memoria
+    let codigoActivo = CATALOGO[0].codigo;
+    let equipoActivo = CATALOGO_EQUIPOS[0].id;
+    let demorasTurno = [];
+    let historialReportes = [];
+
+    // Referencias DOM
+    const inputNombre = document.getElementById('inputNombre');
+    const inputEquipo = document.getElementById('inputEquipo');
+    const selectTurno = document.getElementById('selectTurno');
+    const inputDia = document.getElementById('inputDia');
+
+    // Referencias Selector de Equipos
+    const btnAbrirEquipos = document.getElementById('btnAbrirEquipos');
+    const labelEquipoId = document.getElementById('labelEquipoId');
+    const labelEquipoTipo = document.getElementById('labelEquipoTipo');
+    const modalEquipos = document.getElementById('modalEquipos');
+    const btnCerrarModalEquipos = document.getElementById('btnCerrarModalEquipos');
+    const listaOpcionesEquipos = document.getElementById('listaOpcionesEquipos');
+
+    const inputHoraInicio = document.getElementById('inputHoraInicio');
+    const inputHoraFin = document.getElementById('inputHoraFin');
+    const inputComentario = document.getElementById('inputComentario');
+    const duracionBadge = document.getElementById('duracionBadge');
+
+    const btnAbrirCatalogo = document.getElementById('btnAbrirCatalogo');
+    const labelCodigoActivo = document.getElementById('labelCodigoActivo');
+    const labelDescActiva = document.getElementById('labelDescActiva');
+    const modalCatalogo = document.getElementById('modalCatalogo');
+    const btnCerrarModal = document.getElementById('btnCerrarModal');
+    const listaOpcionesCatalogo = document.getElementById('listaOpcionesCatalogo');
+
+    const btnAgregarDemora = document.getElementById('btnAgregarDemora');
+    const contenedorListaDemoras = document.getElementById('contenedorListaDemoras');
+    const mensajeListaVacia = document.getElementById('mensajeListaVacia');
+    const contadorDemoras = document.getElementById('contadorDemoras');
+    const totalTiempoAcumulado = document.getElementById('totalTiempoAcumulado');
+    const panelCierreTurno = document.getElementById('panelCierreTurno');
+    const btnFinalizarTurno = document.getElementById('btnFinalizarTurno');
+
+    const contenedorHistorial = document.getElementById('contenedorHistorial');
+    const contadorHistorial = document.getElementById('contadorHistorial');
+    const mensajeHistorialVacio = document.getElementById('mensajeHistorialVacio');
+
+    const modalCSV = document.getElementById('modalCSV');
+    const btnCerrarCSV = document.getElementById('btnCerrarCSV');
+    const codigoCSV = document.getElementById('codigoCSV');
+    const btnDescargarDesdeModal = document.getElementById('btnDescargarDesdeModal');
+    let csvTemporal = { contenido: '', nombreArchivo: '' };
+
+    // --- INICIALIZACIÓN Y PERSISTENCIA ---
+
+    function init() {
+      // Configurar fecha por defecto a hoy
+      inputDia.value = new Date().toISOString().split('T')[0];
+
+      // Horas sugeridas
+      const ahora = new Date();
+      inputHoraInicio.value = formatHora(ahora);
+      ahora.setMinutes(ahora.getMinutes() + 30);
+      inputHoraFin.value = formatHora(ahora);
+
+      actualizarCalculoDuracion();
+      renderizarCatalogoModal();
+      renderizarCatalogoEquiposModal();
+      seleccionarEquipo(CATALOGO_EQUIPOS[0].id);
+      restaurarBorrador();
+      restaurarHistorial();
+      asignarEventos();
+    }
+
+    function formatHora(fecha) {
+      const h = String(fecha.getHours()).padStart(2, '0');
+      const m = String(fecha.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    // Calcula minutos entre dos tiempos HH:MM
+    function calcularDiferenciaMinutos(inicio, fin) {
+      if (!inicio || !fin) return 0;
+      const [h1, m1] = inicio.split(':').map(Number);
+      const [h2, m2] = fin.split(':').map(Number);
+      let min1 = h1 * 60 + m1;
+      let min2 = h2 * 60 + m2;
+      if (min2 < min1) min2 += 24 * 60; // Cruce de medianoche
+      return min2 - min1;
+    }
+
+    function actualizarCalculoDuracion() {
+      const min = calcularDiferenciaMinutos(inputHoraInicio.value, inputHoraFin.value);
+      duracionBadge.textContent = `${min} min (${(min / 60).toFixed(2)} h)`;
+    }
+
+    // --- MANEJO DE BORRADOR LOCAL ---
+
+    function autoGuardarBorrador() {
+      const borrador = {
+        nombre: inputNombre.value,
+        equipo: inputEquipo.value,
+        turno: selectTurno.value,
+        dia: inputDia.value,
+        demoras: demorasTurno
+      };
+      localStorage.setItem(STORAGE_KEY_BORRADOR, JSON.stringify(borrador));
+    }
+
+    function restaurarBorrador() {
+      const data = localStorage.getItem(STORAGE_KEY_BORRADOR);
+      if (!data) return;
+      try {
+        const borrador = JSON.parse(data);
+        if (borrador.nombre) inputNombre.value = borrador.nombre;
+        if (borrador.equipo) seleccionarEquipo(borrador.equipo);
+        if (borrador.turno) selectTurno.value = borrador.turno;
+        if (borrador.dia) inputDia.value = borrador.dia;
+        if (Array.isArray(borrador.demoras)) {
+          demorasTurno = borrador.demoras;
+          renderizarListaDemoras();
+        }
+      } catch (e) {
+        console.error('Error restaurando borrador', e);
+      }
+    }
+
+    // --- HISTORIAL PERSISTENTE ---
+
+    function guardarHistorialEnStorage() {
+      localStorage.setItem(STORAGE_KEY_HISTORIAL, JSON.stringify(historialReportes));
+      renderizarHistorial();
+    }
+
+    function restaurarHistorial() {
+      const data = localStorage.getItem(STORAGE_KEY_HISTORIAL);
+      if (!data) return;
+      try {
+        historialReportes = JSON.parse(data) || [];
+      } catch (e) {
+        historialReportes = [];
+      }
+      renderizarHistorial();
+    }
+
+    // --- RENDERIZADO UI ---
+
+    function renderizarCatalogoModal() {
+      listaOpcionesCatalogo.innerHTML = '';
+      CATALOGO.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:border-amber-500/50 hover:bg-slate-800 transition-colors';
+        div.onclick = () => seleccionarCodigo(item.codigo);
+        div.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-amber-400 text-xs font-mono">${item.codigo}</span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">${item.cat}</span>
+            </div>
+            <p class="text-xs text-slate-200 mt-0.5">${item.desc}</p>
+          </div>
+          <span class="text-slate-500 text-xs">Elegir →</span>
+        `;
+        listaOpcionesCatalogo.appendChild(div);
+      });
+    }
+
+    function seleccionarCodigo(codigo) {
+      codigoActivo = codigo;
+      const cat = CATALOGO.find(c => c.codigo === codigo);
+      labelCodigoActivo.textContent = cat.codigo;
+      labelDescActiva.textContent = cat.desc;
+      modalCatalogo.classList.add('hidden');
+    }
+
+    function renderizarCatalogoEquiposModal() {
+      listaOpcionesEquipos.innerHTML = '';
+      CATALOGO_EQUIPOS.forEach(eq => {
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:border-amber-500/50 hover:bg-slate-800 transition-colors';
+        div.onclick = () => seleccionarEquipo(eq.id);
+        div.innerHTML = `
+          <div>
+            <span class="font-bold text-amber-400 text-xs font-mono">${eq.id}</span>
+            <p class="text-xs text-slate-200 mt-0.5">${eq.tipo}</p>
+          </div>
+          <span class="text-slate-500 text-xs">Elegir →</span>
+        `;
+        listaOpcionesEquipos.appendChild(div);
+      });
+    }
+
+    function seleccionarEquipo(id) {
+      const eq = CATALOGO_EQUIPOS.find(e => e.id === id) || CATALOGO_EQUIPOS[0];
+      equipoActivo = eq.id;
+      inputEquipo.value = eq.id;
+      labelEquipoId.textContent = eq.id;
+      labelEquipoTipo.textContent = eq.tipo;
+      modalEquipos.classList.add('hidden');
+      autoGuardarBorrador();
+    }
+
+    function renderizarListaDemoras() {
+      contadorDemoras.textContent = demorasTurno.length;
+
+      // Calcular tiempo total
+      const totalMin = demorasTurno.reduce((acc, curr) => acc + curr.duracionMin, 0);
+      const horasTotales = (totalMin / 60).toFixed(2);
+      totalTiempoAcumulado.textContent = `Total: ${totalMin} min (${horasTotales} hrs)`;
+
+      if (demorasTurno.length === 0) {
+        mensajeListaVacia.classList.remove('hidden');
+        panelCierreTurno.classList.add('hidden');
+        // Limpiar solo los items agregados
+        const items = contenedorListaDemoras.querySelectorAll('.item-demora');
+        items.forEach(el => el.remove());
+        return;
+      }
+
+      mensajeListaVacia.classList.add('hidden');
+      panelCierreTurno.classList.remove('hidden');
+
+      const items = contenedorListaDemoras.querySelectorAll('.item-demora');
+      items.forEach(el => el.remove());
+
+      demorasTurno.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'item-demora bg-slate-950/90 border border-slate-800 rounded-xl p-3 flex items-start justify-between gap-2';
+        div.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-100 font-mono">${item.horaInicio} - ${item.horaFin}</span>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">${item.codigo}</span>
+              <span class="text-[10px] text-slate-400">${item.duracionMin} min</span>
+            </div>
+            <p class="text-xs text-slate-300 mt-1 font-medium truncate">${item.descripcion}</p>
+            ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${item.comentario}"</p>` : ''}
+          </div>
+          <button onclick="eliminarDemora(${index})" class="text-slate-500 hover:text-red-400 p-1 text-sm font-bold">✕</button>
+        `;
+        contenedorListaDemoras.appendChild(div);
+      });
+    }
+
+    function renderizarHistorial() {
+      contadorHistorial.textContent = historialReportes.length;
+      if (historialReportes.length === 0) {
+        mensajeHistorialVacio.classList.remove('hidden');
+        const cards = contenedorHistorial.querySelectorAll('.card-historial');
+        cards.forEach(c => c.remove());
+        return;
+      }
+
+      mensajeHistorialVacio.classList.add('hidden');
+      const cards = contenedorHistorial.querySelectorAll('.card-historial');
+      cards.forEach(c => c.remove());
+
+      historialReportes.forEach((rep, idx) => {
+        const totalMin = rep.demoras.reduce((a, b) => a + b.duracionMin, 0);
+        const card = document.createElement('div');
+        card.className = 'card-historial bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5';
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="text-xs font-bold text-white">${rep.equipo || 'Equipo Sin Nombre'}</p>
+              <p class="text-[11px] text-slate-400">${rep.dia} • ${rep.turno} • ${rep.nombre || 'Operador N/A'}</p>
+            </div>
+            <span class="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
+              ${(totalMin / 60).toFixed(1)} hrs
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
+            <!-- Botón WhatsApp -->
+            <button onclick="enviarReporteWhatsApp(${idx})" 
+              class="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm transition-all">
+              <span>💬</span> WhatsApp
+            </button>
+
+            <!-- Botón Ver CSV -->
+            <button onclick="mostrarCSVModal(${idx})" 
+              class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
+              Ver CSV
+            </button>
+
+            <!-- Botón Descargar -->
+            <button onclick="descargarCSV(${idx})" 
+              class="bg-slate-800 hover:bg-slate-700 text-amber-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar archivo">
+              ⬇
+            </button>
+
+            <!-- Botón Borrar -->
+            <button onclick="eliminarReporteHistorial(${idx})" 
+              class="text-slate-600 hover:text-red-400 p-2 text-xs">
+              🗑
+            </button>
+          </div>
+        `;
+        contenedorHistorial.appendChild(card);
+      });
+    }
+
+    // --- ACCIONES DE FORMULARIO ---
+
+    window.eliminarDemora = function(index) {
+      demorasTurno.splice(index, 1);
+      renderizarListaDemoras();
+      autoGuardarBorrador();
+    };
+
+    window.eliminarReporteHistorial = function(index) {
+      if (confirm('¿Eliminar este reporte archivado?')) {
+        historialReportes.splice(index, 1);
+        guardarHistorialEnStorage();
+      }
+    };
+
+    function agregarDemora() {
+      const inicio = inputHoraInicio.value;
+      const fin = inputHoraFin.value;
+
+      if (!inicio || !fin) {
+        alert('Por favor ingresa la hora de inicio y fin.');
+        return;
+      }
+
+      const duracion = calcularDiferenciaMinutos(inicio, fin);
+      const cat = CATALOGO.find(c => c.codigo === codigoActivo);
+
+      const nuevaDemora = {
+        id: Date.now().toString(),
+        horaInicio: inicio,
+        horaFin: fin,
+        duracionMin: duracion,
+        codigo: codigoActivo,
+        descripcion: cat ? cat.desc : '',
+        comentario: inputComentario.value.trim()
+      };
+
+      demorasTurno.push(nuevaDemora);
+      renderizarListaDemoras();
+      autoGuardarBorrador();
+
+      // Limpiar inputs de demora
+      inputComentario.value = '';
+      inputHoraInicio.value = fin; // El fin anterior se vuelve el nuevo inicio sugerido
+    }
+
+    function finalizarTurno() {
+      if (demorasTurno.length === 0) {
+        alert('No hay demoras agregadas para cerrar el reporte.');
+        return;
+      }
+
+      const nuevoReporte = {
+        id: Date.now().toString(),
+        fechaArchivado: new Date().toISOString(),
+        nombre: inputNombre.value.trim(),
+        equipo: inputEquipo.value.trim(),
+        turno: selectTurno.value,
+        dia: inputDia.value,
+        demoras: [...demorasTurno]
+      };
+
+      historialReportes.unshift(nuevoReporte);
+      guardarHistorialEnStorage();
+
+      // Limpiar turno actual
+      demorasTurno = [];
+      renderizarListaDemoras();
+      autoGuardarBorrador();
+
+      alert('¡Turno finalizado y archivado con éxito en el teléfono!');
+    }
+
+    // --- MOTOR GENERADOR DE CSV (UTF-8 CON BOM) ---
+
+    function construirContenidoCSV(reporte) {
+      // BOM (\uFEFF) esencial para que Excel reconozca acentos y caracteres latinos
+      let csv = '\uFEFF';
+
+      // Metadatos
+      csv += 'REPORTE OPERATIVO DE DEMORAS\n';
+      csv += `Operador,"${(reporte.nombre || 'N/A').replace(/"/g, '""')}"\n`;
+      csv += `Equipo,"${(reporte.equipo || 'N/A').replace(/"/g, '""')}"\n`;
+      csv += `Turno,"${reporte.turno}"\n`;
+      csv += `Fecha,"${reporte.dia}"\n`;
+
+      const totalMin = reporte.demoras.reduce((acc, d) => acc + d.duracionMin, 0);
+      csv += `Horas Totales Parada,${(totalMin / 60).toFixed(2)}\n\n`;
+
+      // Encabezados de tabla
+      csv += 'Item,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
+
+      // Filas
+      reporte.demoras.forEach((d, idx) => {
+        const comentarioEscapado = `"${(d.comentario || '').replace(/"/g, '""')}"`;
+        const descEscapada = `"${(d.descripcion || '').replace(/"/g, '""')}"`;
+        csv += `${idx + 1},${d.horaInicio},${d.horaFin},${d.duracionMin},${d.codigo},${descEscapada},${comentarioEscapado}\n`;
+      });
+
+      return csv;
+    }
+
+    function obtenerNombreArchivo(reporte) {
+      const eq = (reporte.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fecha = (reporte.dia || 'Fecha').replace(/-/g, '');
+      return `Reporte_${eq}_${fecha}.csv`;
+    }
+
+    // --- DESCARGA Y COMPARTIR POR WHATSAPP ---
+
+    window.descargarCSV = function(index) {
+      const reporte = historialReportes[index];
+      const contenido = construirContenidoCSV(reporte);
+      const nombreArchivo = obtenerNombreArchivo(reporte);
+
+      const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', nombreArchivo);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
+    window.mostrarCSVModal = function(index) {
+      const reporte = historialReportes[index];
+      const contenido = construirContenidoCSV(reporte);
+      const nombreArchivo = obtenerNombreArchivo(reporte);
+
+      csvTemporal = { contenido, nombreArchivo };
+      codigoCSV.textContent = contenido;
+      modalCSV.classList.remove('hidden');
+    };
+
+    window.enviarReporteWhatsApp = async function(index) {
+      const reporte = historialReportes[index];
+      const contenidoCSV = construirContenidoCSV(reporte);
+      const nombreArchivo = obtenerNombreArchivo(reporte);
+
+      // Resumen textual para WhatsApp
+      const totalMin = reporte.demoras.reduce((a, b) => a + b.duracionMin, 0);
+      let mensajeTexto = `*REPORTE DE DEMORAS*\n`;
+      mensajeTexto += `🚜 *Equipo:* ${reporte.equipo || 'N/A'}\n`;
+      mensajeTexto += `👤 *Operador:* ${reporte.nombre || 'N/A'}\n`;
+      mensajeTexto += `📅 *Fecha:* ${reporte.dia} (${reporte.turno})\n`;
+      mensajeTexto += `⏱ *Total Demoras:* ${reporte.demoras.length} eventos (${(totalMin / 60).toFixed(2)} hrs)\n\n`;
+      mensajeTexto += `*Detalle:* \n`;
+      reporte.demoras.forEach(d => {
+        mensajeTexto += `• ${d.horaInicio}-${d.horaFin} [${d.codigo}]: ${d.comentario || d.descripcion}\n`;
+      });
+
+      // Intentar Web Share API con archivo nativo (funciona en teléfonos móviles modernos)
+      const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        try {
+          await navigator.share({
+            files: [archivo],
+            title: nombreArchivo,
+            text: mensajeTexto,
+          });
+          return;
+        } catch (err) {
+          // El usuario canceló la hoja nativa o falló el API
+          console.log('Share cancelado o no soportado, ejecutando alternativa.');
+        }
+      }
+
+      // Si no soporta compartir archivo directo: descarga el CSV y abre WhatsApp con el resumen
+      descargarCSV(index);
+      const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`;
+      window.open(urlWhatsApp, '_blank');
+    };
+
+    // --- ASIGNACIÓN DE EVENTOS ---
+
+    function asignarEventos() {
+      // Auto-guardado en entradas de texto
+      [inputNombre, inputEquipo, selectTurno, inputDia].forEach(el => {
+        el.addEventListener('input', autoGuardarBorrador);
+      });
+
+      // Modal catálogo demoras
+      btnAbrirCatalogo.addEventListener('click', () => modalCatalogo.classList.remove('hidden'));
+      btnCerrarModal.addEventListener('click', () => modalCatalogo.classList.add('hidden'));
+
+      // Modal catálogo equipos
+      btnAbrirEquipos.addEventListener('click', () => modalEquipos.classList.remove('hidden'));
+      btnCerrarModalEquipos.addEventListener('click', () => modalEquipos.classList.add('hidden'));
+
+      // Acciones
+      btnAgregarDemora.addEventListener('click', agregarDemora);
+      btnFinalizarTurno.addEventListener('click', finalizarTurno);
+
+      // Modal visor CSV
+      btnCerrarCSV.addEventListener('click', () => modalCSV.classList.add('hidden'));
+      btnDescargarDesdeModal.addEventListener('click', () => {
+        const blob = new Blob([csvTemporal.contenido], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', csvTemporal.nombreArchivo);
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    // Arrancar la aplicación al cargar el documento
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
