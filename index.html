@@ -4,8 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Reporte Operativo de Demoras</title>
-  <!-- Tailwind CSS para estilizado móvil e industrial -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Registro offline de demoras operativas por equipo y turno, con exportación a CSV y WhatsApp." />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Demoras" />
+
+  <!-- Tailwind compilado en local (funciona sin internet) -->
+  <link rel="stylesheet" href="./tailwind.css" />
   <style>
     /* Estilos para sensación de App Nativa */
     body {
@@ -28,7 +40,7 @@
 
   <!-- Contenedor Maqueta Móvil -->
   <main class="w-full max-w-md bg-slate-950 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-screen sm:min-h-[860px] border border-slate-800 relative">
-    
+
     <!-- Barra Superior / Header de la App -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-20">
       <div class="flex items-center justify-between">
@@ -41,7 +53,7 @@
             <p class="text-xs text-slate-400">Reporte de Operaciones</p>
           </div>
         </div>
-        
+
         <!-- Indicador Offline -->
         <div class="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -52,7 +64,7 @@
 
     <!-- Contenido Scrollable -->
     <div class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
-      
+
       <!-- TARJETA 1: Cabecera de Turno -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
@@ -65,13 +77,13 @@
         <div class="grid grid-cols-2 gap-2.5">
           <div class="col-span-2">
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Nombre del Operador</label>
-            <input type="text" id="inputNombre" placeholder="Ej. Carlos Mendoza" 
+            <input type="text" id="inputNombre" placeholder="Ej. Carlos Mendoza"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
 
           <div class="col-span-2">
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Equipo Asignado</label>
-            <button type="button" id="btnAbrirEquipos" 
+            <button type="button" id="btnAbrirEquipos"
               class="w-full text-left bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between hover:border-slate-600 transition-colors">
               <div class="truncate">
                 <span id="labelEquipoId" class="font-bold text-amber-400 text-sm">CV-173</span>
@@ -84,7 +96,7 @@
 
           <div>
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Turno</label>
-            <select id="selectTurno" 
+            <select id="selectTurno"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors">
               <option value="Turno 1 (Día)">Turno 1ra (Día)</option>
               <option value="Turno 2 (Noche)">Turno 2da (Noche)</option>
@@ -93,7 +105,7 @@
 
           <div>
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha</label>
-            <input type="date" id="inputDia" 
+            <input type="date" id="inputDia"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
         </div>
@@ -113,12 +125,12 @@
           <div class="grid grid-cols-2 gap-2.5">
             <div>
               <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Inicial</label>
-              <input type="time" id="inputHoraInicio" 
+              <input type="time" id="inputHoraInicio"
                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
             </div>
             <div>
               <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Final</label>
-              <input type="time" id="inputHoraFin" 
+              <input type="time" id="inputHoraFin"
                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
             </div>
           </div>
@@ -126,7 +138,7 @@
           <!-- Selector de Código (Abre Modal de Catálogo) -->
           <div>
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Código de Demora</label>
-            <button type="button" id="btnAbrirCatalogo" 
+            <button type="button" id="btnAbrirCatalogo"
               class="w-full text-left bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between hover:border-slate-600 transition-colors">
               <div class="truncate">
                 <span id="labelCodigoActivo" class="font-bold text-amber-400 text-sm">200</span>
@@ -139,12 +151,12 @@
           <!-- Comentarios -->
           <div>
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Comentario u Observaciones</label>
-            <textarea id="inputComentario" rows="2" placeholder="Detalle la causa o evento..." 
+            <textarea id="inputComentario" rows="2" placeholder="Detalle la causa o evento..."
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 resize-none"></textarea>
           </div>
 
           <!-- Botón Agregar Demora -->
-          <button type="button" id="btnAgregarDemora" 
+          <button type="button" id="btnAgregarDemora"
             class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-amber-500/30 transition-all shadow-sm">
             <span>➕</span> Agregar a la Jornada
           </button>
@@ -169,7 +181,7 @@
 
         <!-- Botón Guardar / Finalizar Turno -->
         <div id="panelCierreTurno" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
-          <button type="button" id="btnFinalizarTurno" 
+          <button type="button" id="btnFinalizarTurno"
             class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition-all">
             <span>💾</span> Finalizar y Archivar Turno
           </button>
@@ -180,7 +192,8 @@
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <span>📦</span> Reportes en Memoria Local (<span id="contadorHistorial">0</span>)
+            <span>📦</span>
+            <span>Reportes en Memoria Local (<span id="contadorHistorial">0</span>)</span>
           </h2>
           <span class="text-[10px] text-slate-400">Listos p/ WhatsApp</span>
         </div>
@@ -365,11 +378,40 @@
     const btnDescargarDesdeModal = document.getElementById('btnDescargarDesdeModal');
     let csvTemporal = { contenido: '', nombreArchivo: '' };
 
+    // --- UTILIDADES ---
+
+    // Escapa texto del usuario antes de insertarlo como HTML
+    function escaparHTML(texto) {
+      return String(texto == null ? '' : texto)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Fecha local en formato YYYY-MM-DD (toISOString usa UTC y puede dar el día equivocado)
+    function fechaLocalISO(fecha) {
+      const y = fecha.getFullYear();
+      const m = String(fecha.getMonth() + 1).padStart(2, '0');
+      const d = String(fecha.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // Guardado seguro en localStorage (evita que un error de cuota detenga la app)
+    function guardarStorage(clave, valor) {
+      try {
+        localStorage.setItem(clave, JSON.stringify(valor));
+      } catch (e) {
+        console.error('No se pudo guardar en el almacenamiento local', e);
+      }
+    }
+
     // --- INICIALIZACIÓN Y PERSISTENCIA ---
 
     function init() {
-      // Configurar fecha por defecto a hoy
-      inputDia.value = new Date().toISOString().split('T')[0];
+      // Fecha por defecto: hoy (hora local)
+      inputDia.value = fechaLocalISO(new Date());
 
       // Horas sugeridas
       const ahora = new Date();
@@ -380,8 +422,14 @@
       actualizarCalculoDuracion();
       renderizarCatalogoModal();
       renderizarCatalogoEquiposModal();
-      seleccionarEquipo(CATALOGO_EQUIPOS[0].id);
-      restaurarBorrador();
+
+      // Primero se restaura el borrador y luego se aplica el equipo por defecto
+      // (antes el equipo por defecto sobrescribía el borrador guardado al abrir la app)
+      const hayBorrador = restaurarBorrador();
+      if (!hayBorrador) {
+        seleccionarEquipo(CATALOGO_EQUIPOS[0].id, false);
+      }
+
       restaurarHistorial();
       asignarEventos();
     }
@@ -418,41 +466,55 @@
         dia: inputDia.value,
         demoras: demorasTurno
       };
-      localStorage.setItem(STORAGE_KEY_BORRADOR, JSON.stringify(borrador));
+      guardarStorage(STORAGE_KEY_BORRADOR, borrador);
     }
 
+    // Devuelve true si había un borrador válido que se restauró
     function restaurarBorrador() {
-      const data = localStorage.getItem(STORAGE_KEY_BORRADOR);
-      if (!data) return;
+      let data = null;
+      try {
+        data = localStorage.getItem(STORAGE_KEY_BORRADOR);
+      } catch (e) {
+        return false;
+      }
+      if (!data) return false;
       try {
         const borrador = JSON.parse(data);
         if (borrador.nombre) inputNombre.value = borrador.nombre;
-        if (borrador.equipo) seleccionarEquipo(borrador.equipo);
+        seleccionarEquipo(borrador.equipo || CATALOGO_EQUIPOS[0].id, false);
         if (borrador.turno) selectTurno.value = borrador.turno;
         if (borrador.dia) inputDia.value = borrador.dia;
         if (Array.isArray(borrador.demoras)) {
           demorasTurno = borrador.demoras;
           renderizarListaDemoras();
         }
+        return true;
       } catch (e) {
         console.error('Error restaurando borrador', e);
+        return false;
       }
     }
 
     // --- HISTORIAL PERSISTENTE ---
 
     function guardarHistorialEnStorage() {
-      localStorage.setItem(STORAGE_KEY_HISTORIAL, JSON.stringify(historialReportes));
+      guardarStorage(STORAGE_KEY_HISTORIAL, historialReportes);
       renderizarHistorial();
     }
 
     function restaurarHistorial() {
-      const data = localStorage.getItem(STORAGE_KEY_HISTORIAL);
-      if (!data) return;
+      let data = null;
       try {
-        historialReportes = JSON.parse(data) || [];
+        data = localStorage.getItem(STORAGE_KEY_HISTORIAL);
       } catch (e) {
-        historialReportes = [];
+        data = null;
+      }
+      if (data) {
+        try {
+          historialReportes = JSON.parse(data) || [];
+        } catch (e) {
+          historialReportes = [];
+        }
       }
       renderizarHistorial();
     }
@@ -504,14 +566,14 @@
       });
     }
 
-    function seleccionarEquipo(id) {
+    function seleccionarEquipo(id, guardar = true) {
       const eq = CATALOGO_EQUIPOS.find(e => e.id === id) || CATALOGO_EQUIPOS[0];
       equipoActivo = eq.id;
       inputEquipo.value = eq.id;
       labelEquipoId.textContent = eq.id;
       labelEquipoTipo.textContent = eq.tipo;
       modalEquipos.classList.add('hidden');
-      autoGuardarBorrador();
+      if (guardar) autoGuardarBorrador();
     }
 
     function renderizarListaDemoras() {
@@ -522,20 +584,18 @@
       const horasTotales = (totalMin / 60).toFixed(2);
       totalTiempoAcumulado.textContent = `Total: ${totalMin} min (${horasTotales} hrs)`;
 
+      // Limpiar solo los items agregados
+      const items = contenedorListaDemoras.querySelectorAll('.item-demora');
+      items.forEach(el => el.remove());
+
       if (demorasTurno.length === 0) {
         mensajeListaVacia.classList.remove('hidden');
         panelCierreTurno.classList.add('hidden');
-        // Limpiar solo los items agregados
-        const items = contenedorListaDemoras.querySelectorAll('.item-demora');
-        items.forEach(el => el.remove());
         return;
       }
 
       mensajeListaVacia.classList.add('hidden');
       panelCierreTurno.classList.remove('hidden');
-
-      const items = contenedorListaDemoras.querySelectorAll('.item-demora');
-      items.forEach(el => el.remove());
 
       demorasTurno.forEach((item, index) => {
         const div = document.createElement('div');
@@ -543,12 +603,12 @@
         div.innerHTML = `
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-100 font-mono">${item.horaInicio} - ${item.horaFin}</span>
-              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">${item.codigo}</span>
+              <span class="text-xs font-bold text-slate-100 font-mono">${escaparHTML(item.horaInicio)} - ${escaparHTML(item.horaFin)}</span>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">${escaparHTML(item.codigo)}</span>
               <span class="text-[10px] text-slate-400">${item.duracionMin} min</span>
             </div>
-            <p class="text-xs text-slate-300 mt-1 font-medium truncate">${item.descripcion}</p>
-            ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${item.comentario}"</p>` : ''}
+            <p class="text-xs text-slate-300 mt-1 font-medium truncate">${escaparHTML(item.descripcion)}</p>
+            ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${escaparHTML(item.comentario)}"</p>` : ''}
           </div>
           <button onclick="eliminarDemora(${index})" class="text-slate-500 hover:text-red-400 p-1 text-sm font-bold">✕</button>
         `;
@@ -558,16 +618,16 @@
 
     function renderizarHistorial() {
       contadorHistorial.textContent = historialReportes.length;
+
+      const cards = contenedorHistorial.querySelectorAll('.card-historial');
+      cards.forEach(c => c.remove());
+
       if (historialReportes.length === 0) {
         mensajeHistorialVacio.classList.remove('hidden');
-        const cards = contenedorHistorial.querySelectorAll('.card-historial');
-        cards.forEach(c => c.remove());
         return;
       }
 
       mensajeHistorialVacio.classList.add('hidden');
-      const cards = contenedorHistorial.querySelectorAll('.card-historial');
-      cards.forEach(c => c.remove());
 
       historialReportes.forEach((rep, idx) => {
         const totalMin = rep.demoras.reduce((a, b) => a + b.duracionMin, 0);
@@ -576,8 +636,8 @@
         card.innerHTML = `
           <div class="flex items-start justify-between">
             <div>
-              <p class="text-xs font-bold text-white">${rep.equipo || 'Equipo Sin Nombre'}</p>
-              <p class="text-[11px] text-slate-400">${rep.dia} • ${rep.turno} • ${rep.nombre || 'Operador N/A'}</p>
+              <p class="text-xs font-bold text-white">${escaparHTML(rep.equipo || 'Equipo Sin Nombre')}</p>
+              <p class="text-[11px] text-slate-400">${escaparHTML(rep.dia)} • ${escaparHTML(rep.turno)} • ${escaparHTML(rep.nombre || 'Operador N/A')}</p>
             </div>
             <span class="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
               ${(totalMin / 60).toFixed(1)} hrs
@@ -586,25 +646,25 @@
 
           <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
             <!-- Botón WhatsApp -->
-            <button onclick="enviarReporteWhatsApp(${idx})" 
+            <button onclick="enviarReporteWhatsApp(${idx})"
               class="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm transition-all">
               <span>💬</span> WhatsApp
             </button>
 
             <!-- Botón Ver CSV -->
-            <button onclick="mostrarCSVModal(${idx})" 
+            <button onclick="mostrarCSVModal(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
               Ver CSV
             </button>
 
             <!-- Botón Descargar -->
-            <button onclick="descargarCSV(${idx})" 
+            <button onclick="descargarCSV(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-amber-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar archivo">
               ⬇
             </button>
 
             <!-- Botón Borrar -->
-            <button onclick="eliminarReporteHistorial(${idx})" 
+            <button onclick="eliminarReporteHistorial(${idx})"
               class="text-slate-600 hover:text-red-400 p-2 text-xs">
               🗑
             </button>
@@ -658,6 +718,7 @@
       // Limpiar inputs de demora
       inputComentario.value = '';
       inputHoraInicio.value = fin; // El fin anterior se vuelve el nuevo inicio sugerido
+      actualizarCalculoDuracion();
     }
 
     function finalizarTurno() {
@@ -690,8 +751,8 @@
     // --- MOTOR GENERADOR DE CSV (UTF-8 CON BOM) ---
 
     function construirContenidoCSV(reporte) {
-      // BOM (\uFEFF) esencial para que Excel reconozca acentos y caracteres latinos
-      let csv = '\uFEFF';
+      // BOM (﻿) esencial para que Excel reconozca acentos y caracteres latinos
+      let csv = '﻿';
 
       // Metadatos
       csv += 'REPORTE OPERATIVO DE DEMORAS\n';
@@ -722,13 +783,8 @@
       return `Reporte_${eq}_${fecha}.csv`;
     }
 
-    // --- DESCARGA Y COMPARTIR POR WHATSAPP ---
-
-    window.descargarCSV = function(index) {
-      const reporte = historialReportes[index];
-      const contenido = construirContenidoCSV(reporte);
-      const nombreArchivo = obtenerNombreArchivo(reporte);
-
+    // Descarga un texto como archivo CSV
+    function descargarBlobCSV(contenido, nombreArchivo) {
       const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -737,7 +793,14 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // --- DESCARGA Y COMPARTIR POR WHATSAPP ---
+
+    window.descargarCSV = function(index) {
+      const reporte = historialReportes[index];
+      descargarBlobCSV(construirContenidoCSV(reporte), obtenerNombreArchivo(reporte));
     };
 
     window.mostrarCSVModal = function(index) {
@@ -768,19 +831,20 @@
       });
 
       // Intentar Web Share API con archivo nativo (funciona en teléfonos móviles modernos)
-      const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
-      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        try {
+      try {
+        const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
+        if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
           await navigator.share({
             files: [archivo],
             title: nombreArchivo,
             text: mensajeTexto,
           });
           return;
-        } catch (err) {
-          // El usuario canceló la hoja nativa o falló el API
-          console.log('Share cancelado o no soportado, ejecutando alternativa.');
         }
+      } catch (err) {
+        // El usuario canceló la hoja nativa: no hacer nada más
+        if (err && err.name === 'AbortError') return;
+        console.log('Compartir archivo no disponible, ejecutando alternativa.');
       }
 
       // Si no soporta compartir archivo directo: descarga el CSV y abre WhatsApp con el resumen
@@ -795,6 +859,13 @@
       // Auto-guardado en entradas de texto
       [inputNombre, inputEquipo, selectTurno, inputDia].forEach(el => {
         el.addEventListener('input', autoGuardarBorrador);
+        el.addEventListener('change', autoGuardarBorrador);
+      });
+
+      // Recalcular la duración al cambiar las horas
+      [inputHoraInicio, inputHoraFin].forEach(el => {
+        el.addEventListener('input', actualizarCalculoDuracion);
+        el.addEventListener('change', actualizarCalculoDuracion);
       });
 
       // Modal catálogo demoras
@@ -805,6 +876,13 @@
       btnAbrirEquipos.addEventListener('click', () => modalEquipos.classList.remove('hidden'));
       btnCerrarModalEquipos.addEventListener('click', () => modalEquipos.classList.add('hidden'));
 
+      // Cerrar modales al tocar el fondo oscuro
+      [modalCatalogo, modalEquipos, modalCSV].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.add('hidden');
+        });
+      });
+
       // Acciones
       btnAgregarDemora.addEventListener('click', agregarDemora);
       btnFinalizarTurno.addEventListener('click', finalizarTurno);
@@ -812,18 +890,21 @@
       // Modal visor CSV
       btnCerrarCSV.addEventListener('click', () => modalCSV.classList.add('hidden'));
       btnDescargarDesdeModal.addEventListener('click', () => {
-        const blob = new Blob([csvTemporal.contenido], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', csvTemporal.nombreArchivo);
-        link.click();
-        URL.revokeObjectURL(url);
+        descargarBlobCSV(csvTemporal.contenido, csvTemporal.nombreArchivo);
       });
     }
 
     // Arrancar la aplicación al cargar el documento
     window.addEventListener('DOMContentLoaded', init);
+
+    // --- SERVICE WORKER (funcionamiento sin conexión) ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.error('No se pudo registrar el service worker', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>
