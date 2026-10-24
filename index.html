@@ -7,10 +7,10 @@
   <meta name="description" content="Registro offline de demoras operativas por equipo y turno, con exportación a CSV y WhatsApp." />
 
   <!-- PWA -->
-  <meta name="theme-color" content="#0f172a" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/png" href="./icons/icon-192.png" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <meta name="theme-color" content="#0f172a" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -33,6 +33,25 @@
     .scrollbar-none {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+
+    /* ALTA VISIBILIDAD PARA SELECTORES DE HORA */
+    input[type="time"] {
+      color-scheme: dark;
+      letter-spacing: 0;
+    }
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.9) brightness(1.2);
+      cursor: pointer;
+      opacity: 0.95;
+      margin: 0 0 0 2px;
+      padding: 0;
+    }
+    #inputHoraInicio::-webkit-calendar-picker-indicator {
+      filter: invert(75%) sepia(85%) saturate(700%) hue-rotate(360deg);
+    }
+    #inputHoraFin::-webkit-calendar-picker-indicator {
+      filter: invert(75%) sepia(80%) saturate(600%) hue-rotate(110deg);
     }
   </style>
 </head>
@@ -65,7 +84,7 @@
     <!-- Contenido Scrollable -->
     <div class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
 
-      <!-- TARJETA 1: Cabecera de Turno -->
+      <!-- TARJETA 1: Cabecera de Turno y Horómetros -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
@@ -108,30 +127,66 @@
             <input type="date" id="inputDia"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
+
+          <!-- BLOQUE DE HORÓMETROS (MOTOR) -->
+          <div class="col-span-2 pt-2 mt-1 border-t border-slate-800/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                <span>⚙️</span> Horómetro de Motor
+              </label>
+              <span id="badgeHorasMotor" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                0.0 hrs motor
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <input type="number" step="0.1" id="inputHorometroInicial" placeholder="H. Inicial"
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono text-center focus:outline-none focus:border-amber-500 transition-colors" />
+              </div>
+              <div>
+                <input type="number" step="0.1" id="inputHorometroFinal" placeholder="H. Final"
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono text-center focus:outline-none focus:border-amber-500 transition-colors" />
+              </div>
+            </div>
+
+            <p id="alertaErrorHorometro" class="text-[11px] text-red-400 mt-1.5 hidden flex items-center gap-1 font-medium">
+              <span>⚠️</span> El horómetro final no puede ser menor que el inicial.
+            </p>
+          </div>
         </div>
       </section>
 
-      <!-- TARJETA 2: Captura de Demoras -->
+      <!-- TARJETA 2: Captura de Demoras (Selector de Horas con Alta Visibilidad) -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
             <span>⚠️</span> Registrar Demora
           </h2>
-          <span id="duracionBadge" class="text-[11px] font-semibold text-slate-400">0 min</span>
+          <span id="duracionBadge" class="text-[11px] font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">0 min (0.00 h)</span>
         </div>
 
         <div class="space-y-3">
-          <!-- Horarios -->
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Inicial</label>
+          <!-- BLOQUE DE HORARIOS RESALTADOS PARA ALTA VISIBILIDAD -->
+          <div class="grid grid-cols-2 gap-2.5 bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
+            <!-- Hora Inicial: Acento Ámbar / Dorado -->
+            <div class="bg-amber-950/30 p-2 rounded-xl border border-amber-500/20">
+              <label class="flex items-center justify-between text-[11px] font-bold text-amber-400 mb-1 tracking-wide">
+                <span class="flex items-center gap-1"><span>🕒</span> Hora Inicial</span>
+                <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold uppercase">Inicio</span>
+              </label>
               <input type="time" id="inputHoraInicio"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
+                class="w-full bg-slate-900 border-2 border-amber-500/60 rounded-xl px-1 py-2.5 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400 text-center font-mono shadow-inner cursor-pointer transition-all" />
             </div>
-            <div>
-              <label class="block text-[11px] font-medium text-slate-400 mb-1">Hora Final</label>
+
+            <!-- Hora Final: Acento Esmeralda / Verde -->
+            <div class="bg-emerald-950/30 p-2 rounded-xl border border-emerald-500/20">
+              <label class="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1 tracking-wide">
+                <span class="flex items-center gap-1"><span>🏁</span> Hora Final</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-semibold uppercase">Fin</span>
+              </label>
               <input type="time" id="inputHoraFin"
-                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono" />
+                class="w-full bg-slate-900 border-2 border-emerald-500/60 rounded-xl px-1 py-2.5 text-sm font-bold text-emerald-300 focus:outline-none focus:border-emerald-400 text-center font-mono shadow-inner cursor-pointer transition-all" />
             </div>
           </div>
 
@@ -155,10 +210,17 @@
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 resize-none"></textarea>
           </div>
 
-          <!-- Botón Agregar Demora -->
+          <!-- Aviso de empalme / hora inválida -->
+          <p id="avisoDemora" role="status" class="hidden text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2"></p>
+
+          <!-- Botón Agregar / Guardar Demora -->
           <button type="button" id="btnAgregarDemora"
             class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-amber-500/30 transition-all shadow-sm">
-            <span>➕</span> Agregar a la Jornada
+            <span id="iconoBtnAgregar">➕</span> <span id="textoBtnAgregar">Agregar a la Jornada</span>
+          </button>
+          <button type="button" id="btnCancelarEdicion"
+            class="hidden w-full text-slate-400 hover:text-white text-xs font-semibold py-2 rounded-xl border border-slate-700/80">
+            Cancelar edición
           </button>
         </div>
       </section>
@@ -171,6 +233,8 @@
           </h2>
           <span id="totalTiempoAcumulado" class="text-xs font-bold text-amber-400">Total: 0 hrs</span>
         </div>
+
+        <p id="avisoTotalTurno" role="status" class="hidden text-[11px] font-medium text-red-400 bg-red-950/40 border border-red-500/30 rounded-xl px-3 py-2 mb-2"></p>
 
         <!-- Lista vacía / Lista dinámica -->
         <div id="contenedorListaDemoras" class="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-none">
@@ -259,7 +323,7 @@
 
   </main>
 
-  <!-- LÓGICA JAVASCRIPT: PERSISTENCIA OFFLINE, CSV & WHATSAPP -->
+  <!-- LÓGICA JAVASCRIPT: PERSISTENCIA OFFLINE, HORÓMETROS, CSV & WHATSAPP -->
   <script>
     // Catálogo maestro estandarizado
     const CATALOGO = [
@@ -318,11 +382,17 @@
       { id: 'CV-184', tipo: 'CAMION VOLTEO' },
       { id: 'CV-185', tipo: 'CAMION VOLTEO' },
       { id: 'CV-186', tipo: 'CAMION VOLTEO' },
+      { id: 'CV-188', tipo: 'CAMION VOLTEO' },
       { id: 'GOND-03', tipo: 'GONDOLA' },
       { id: 'GOND-04', tipo: 'GONDOLA' },
       { id: 'GOND-05', tipo: 'GONDOLA' },
-      { id: '171', tipo: 'CAMION VOLTEO 14 M3' },
-      { id: '172', tipo: 'CAMION VOLTEO 14 M3' }
+      { id: 'CV-171', tipo: 'CAMION VOLTEO 14 M3' },
+      { id: 'CV-172', tipo: 'CAMION VOLTEO 14 M3' },
+      { id: 'DG-09', tipo: 'TRACTOR' },
+      { id: 'MOTO-06', tipo: 'MOTONIVELADORA' },
+      { id: 'CF-04', tipo: 'CARGADOR FRONTAL' },
+      { id: 'CF-05', tipo: 'CARGADOR FRONTAL' },
+      { id: 'BH-20', tipo: 'RETROEXCAVADORA' }
     ];
 
     const STORAGE_KEY_BORRADOR = 'app_demoras_borrador_v1';
@@ -331,14 +401,25 @@
     // Estado en Memoria
     let codigoActivo = CATALOGO[0].codigo;
     let equipoActivo = CATALOGO_EQUIPOS[0].id;
+    // Duración del turno en horas (se usa para avisar si las demoras suman más que el turno)
+    const DURACION_TURNO_HORAS = 12;
+
     let demorasTurno = [];
+    let editandoId = null;        // id de la demora que se está editando (o null)
+    let solapeConfirmado = false; // el usuario ya vio el aviso de empalme y quiere continuar
     let historialReportes = [];
 
-    // Referencias DOM
+    // Referencias DOM Cabecera
     const inputNombre = document.getElementById('inputNombre');
     const inputEquipo = document.getElementById('inputEquipo');
     const selectTurno = document.getElementById('selectTurno');
     const inputDia = document.getElementById('inputDia');
+
+    // Referencias Horómetros
+    const inputHorometroInicial = document.getElementById('inputHorometroInicial');
+    const inputHorometroFinal = document.getElementById('inputHorometroFinal');
+    const badgeHorasMotor = document.getElementById('badgeHorasMotor');
+    const alertaErrorHorometro = document.getElementById('alertaErrorHorometro');
 
     // Referencias Selector de Equipos
     const btnAbrirEquipos = document.getElementById('btnAbrirEquipos');
@@ -348,6 +429,7 @@
     const btnCerrarModalEquipos = document.getElementById('btnCerrarModalEquipos');
     const listaOpcionesEquipos = document.getElementById('listaOpcionesEquipos');
 
+    // Referencias Demoras
     const inputHoraInicio = document.getElementById('inputHoraInicio');
     const inputHoraFin = document.getElementById('inputHoraFin');
     const inputComentario = document.getElementById('inputComentario');
@@ -361,6 +443,11 @@
     const listaOpcionesCatalogo = document.getElementById('listaOpcionesCatalogo');
 
     const btnAgregarDemora = document.getElementById('btnAgregarDemora');
+    const iconoBtnAgregar = document.getElementById('iconoBtnAgregar');
+    const textoBtnAgregar = document.getElementById('textoBtnAgregar');
+    const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+    const avisoDemora = document.getElementById('avisoDemora');
+    const avisoTotalTurno = document.getElementById('avisoTotalTurno');
     const contenedorListaDemoras = document.getElementById('contenedorListaDemoras');
     const mensajeListaVacia = document.getElementById('mensajeListaVacia');
     const contadorDemoras = document.getElementById('contadorDemoras');
@@ -368,10 +455,12 @@
     const panelCierreTurno = document.getElementById('panelCierreTurno');
     const btnFinalizarTurno = document.getElementById('btnFinalizarTurno');
 
+    // Referencias Historial
     const contenedorHistorial = document.getElementById('contenedorHistorial');
     const contadorHistorial = document.getElementById('contadorHistorial');
     const mensajeHistorialVacio = document.getElementById('mensajeHistorialVacio');
 
+    // Referencias Modal CSV
     const modalCSV = document.getElementById('modalCSV');
     const btnCerrarCSV = document.getElementById('btnCerrarCSV');
     const codigoCSV = document.getElementById('codigoCSV');
@@ -380,7 +469,6 @@
 
     // --- UTILIDADES ---
 
-    // Escapa texto del usuario antes de insertarlo como HTML
     function escaparHTML(texto) {
       return String(texto == null ? '' : texto)
         .replace(/&/g, '&amp;')
@@ -390,7 +478,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Fecha local en formato YYYY-MM-DD (toISOString usa UTC y puede dar el día equivocado)
     function fechaLocalISO(fecha) {
       const y = fecha.getFullYear();
       const m = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -398,7 +485,6 @@
       return `${y}-${m}-${d}`;
     }
 
-    // Guardado seguro en localStorage (evita que un error de cuota detenga la app)
     function guardarStorage(clave, valor) {
       try {
         localStorage.setItem(clave, JSON.stringify(valor));
@@ -407,13 +493,57 @@
       }
     }
 
+    // --- CÁLCULO Y VALIDACIÓN DE HORÓMETROS ---
+
+    function calcularHorasMotor() {
+      const valIni = inputHorometroInicial.value.trim();
+      const valFin = inputHorometroFinal.value.trim();
+
+      if (valIni === '' && valFin === '') {
+        badgeHorasMotor.textContent = '0.0 hrs motor';
+        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+        alertaErrorHorometro.classList.add('hidden');
+        return null;
+      }
+
+      if (valIni === '' || valFin === '') {
+        badgeHorasMotor.textContent = 'Pendiente...';
+        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30';
+        alertaErrorHorometro.classList.add('hidden');
+        return null;
+      }
+
+      const hIni = parseFloat(valIni);
+      const hFin = parseFloat(valFin);
+
+      if (isNaN(hIni) || isNaN(hFin)) {
+        badgeHorasMotor.textContent = 'Inválido';
+        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-red-400 bg-slate-950 px-2 py-0.5 rounded border border-red-500/30';
+        alertaErrorHorometro.classList.add('hidden');
+        return null;
+      }
+
+      const diff = hFin - hIni;
+
+      if (diff < 0) {
+        badgeHorasMotor.textContent = 'Error: Final < Inicial';
+        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-500/30';
+        alertaErrorHorometro.classList.remove('hidden');
+        return null;
+      } else {
+        const delta = diff.toFixed(1);
+        badgeHorasMotor.textContent = `${delta} hrs motor`;
+        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30';
+        alertaErrorHorometro.classList.add('hidden');
+        return delta;
+      }
+    }
+
     // --- INICIALIZACIÓN Y PERSISTENCIA ---
 
     function init() {
-      // Fecha por defecto: hoy (hora local)
       inputDia.value = fechaLocalISO(new Date());
 
-      // Horas sugeridas
       const ahora = new Date();
       inputHoraInicio.value = formatHora(ahora);
       ahora.setMinutes(ahora.getMinutes() + 30);
@@ -423,13 +553,12 @@
       renderizarCatalogoModal();
       renderizarCatalogoEquiposModal();
 
-      // Primero se restaura el borrador y luego se aplica el equipo por defecto
-      // (antes el equipo por defecto sobrescribía el borrador guardado al abrir la app)
       const hayBorrador = restaurarBorrador();
       if (!hayBorrador) {
         seleccionarEquipo(CATALOGO_EQUIPOS[0].id, false);
       }
 
+      calcularHorasMotor();
       restaurarHistorial();
       asignarEventos();
     }
@@ -440,20 +569,73 @@
       return `${h}:${m}`;
     }
 
-    // Calcula minutos entre dos tiempos HH:MM
     function calcularDiferenciaMinutos(inicio, fin) {
       if (!inicio || !fin) return 0;
       const [h1, m1] = inicio.split(':').map(Number);
       const [h2, m2] = fin.split(':').map(Number);
       let min1 = h1 * 60 + m1;
       let min2 = h2 * 60 + m2;
-      if (min2 < min1) min2 += 24 * 60; // Cruce de medianoche
+      if (min2 < min1) min2 += 24 * 60;
       return min2 - min1;
     }
 
     function actualizarCalculoDuracion() {
       const min = calcularDiferenciaMinutos(inputHoraInicio.value, inputHoraFin.value);
       duracionBadge.textContent = `${min} min (${(min / 60).toFixed(2)} h)`;
+      solapeConfirmado = false; // si cambian las horas, hay que volver a confirmar
+      actualizarAvisoDemora();
+      actualizarTextoBoton();
+    }
+
+    function horaAMinutos(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    // Suma minutos a una hora HH:MM (da la vuelta a las 24 h)
+    function sumarMinutos(hhmm, minutos) {
+      const total = (horaAMinutos(hhmm) + minutos + 1440) % 1440;
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+
+    // Devuelve la demora ya cargada que se empalma con inicio-fin (considera cruce de medianoche)
+    function buscarSolape(inicio, fin, ignorarId) {
+      const dur = calcularDiferenciaMinutos(inicio, fin);
+      if (dur === 0) return null;
+      const dentro = (x, desde, duracion) => ((x - desde + 1440) % 1440) < duracion;
+      const s1 = horaAMinutos(inicio);
+      return demorasTurno.find(o => {
+        if (o.id === ignorarId || !o.duracionMin) return false;
+        const s2 = horaAMinutos(o.horaInicio);
+        return dentro(s1, s2, o.duracionMin) || dentro(s2, s1, dur);
+      }) || null;
+    }
+
+    function actualizarAvisoDemora() {
+      const inicio = inputHoraInicio.value;
+      const fin = inputHoraFin.value;
+      let mensaje = '';
+      if (inicio && fin) {
+        if (inicio === fin) {
+          mensaje = 'La hora final es igual a la inicial. Corrígela para registrar la demora.';
+        } else {
+          const otra = buscarSolape(inicio, fin, editandoId);
+          if (otra) {
+            mensaje = `⚠️ Se empalma con la demora de ${otra.horaInicio} a ${otra.horaFin} (código ${otra.codigo}).`;
+          }
+        }
+      }
+      avisoDemora.textContent = mensaje;
+      avisoDemora.classList.toggle('hidden', !mensaje);
+    }
+
+    function actualizarTextoBoton() {
+      const editando = editandoId !== null;
+      iconoBtnAgregar.textContent = editando ? '💾' : '➕';
+      textoBtnAgregar.textContent = solapeConfirmado
+        ? (editando ? 'Guardar de todos modos' : 'Agregar de todos modos')
+        : (editando ? 'Guardar cambios' : 'Agregar a la Jornada');
+      btnCancelarEdicion.classList.toggle('hidden', !editando);
     }
 
     // --- MANEJO DE BORRADOR LOCAL ---
@@ -464,12 +646,13 @@
         equipo: inputEquipo.value,
         turno: selectTurno.value,
         dia: inputDia.value,
+        horometroInicial: inputHorometroInicial.value,
+        horometroFinal: inputHorometroFinal.value,
         demoras: demorasTurno
       };
       guardarStorage(STORAGE_KEY_BORRADOR, borrador);
     }
 
-    // Devuelve true si había un borrador válido que se restauró
     function restaurarBorrador() {
       let data = null;
       try {
@@ -484,6 +667,8 @@
         seleccionarEquipo(borrador.equipo || CATALOGO_EQUIPOS[0].id, false);
         if (borrador.turno) selectTurno.value = borrador.turno;
         if (borrador.dia) inputDia.value = borrador.dia;
+        if (borrador.horometroInicial != null) inputHorometroInicial.value = borrador.horometroInicial;
+        if (borrador.horometroFinal != null) inputHorometroFinal.value = borrador.horometroFinal;
         if (Array.isArray(borrador.demoras)) {
           demorasTurno = borrador.demoras;
           renderizarListaDemoras();
@@ -579,12 +764,15 @@
     function renderizarListaDemoras() {
       contadorDemoras.textContent = demorasTurno.length;
 
-      // Calcular tiempo total
       const totalMin = demorasTurno.reduce((acc, curr) => acc + curr.duracionMin, 0);
       const horasTotales = (totalMin / 60).toFixed(2);
       totalTiempoAcumulado.textContent = `Total: ${totalMin} min (${horasTotales} hrs)`;
 
-      // Limpiar solo los items agregados
+      const excede = totalMin > DURACION_TURNO_HORAS * 60;
+      totalTiempoAcumulado.className = 'text-xs font-bold ' + (excede ? 'text-red-400' : 'text-amber-400');
+      avisoTotalTurno.textContent = `Las demoras suman más de ${DURACION_TURNO_HORAS} h, la duración del turno. Revisa que ninguna esté repetida.`;
+      avisoTotalTurno.classList.toggle('hidden', !excede);
+
       const items = contenedorListaDemoras.querySelectorAll('.item-demora');
       items.forEach(el => el.remove());
 
@@ -599,7 +787,9 @@
 
       demorasTurno.forEach((item, index) => {
         const div = document.createElement('div');
-        div.className = 'item-demora bg-slate-950/90 border border-slate-800 rounded-xl p-3 flex items-start justify-between gap-2';
+        const enEdicion = item.id === editandoId;
+        div.className = 'item-demora rounded-xl p-3 flex items-start justify-between gap-2 border ' +
+          (enEdicion ? 'bg-amber-500/10 border-amber-500/60' : 'bg-slate-950/90 border-slate-800');
         div.innerHTML = `
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
@@ -610,7 +800,10 @@
             <p class="text-xs text-slate-300 mt-1 font-medium truncate">${escaparHTML(item.descripcion)}</p>
             ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${escaparHTML(item.comentario)}"</p>` : ''}
           </div>
-          <button onclick="eliminarDemora(${index})" class="text-slate-500 hover:text-red-400 p-1 text-sm font-bold">✕</button>
+          <div class="flex items-center">
+            <button onclick="editarDemora(${index})" aria-label="Editar demora" class="text-slate-500 hover:text-amber-300 px-2 py-1 text-sm font-bold">✎</button>
+            <button onclick="eliminarDemora(${index})" aria-label="Eliminar demora" class="text-slate-500 hover:text-red-400 px-2 py-1 text-sm font-bold">✕</button>
+          </div>
         `;
         contenedorListaDemoras.appendChild(div);
       });
@@ -631,13 +824,20 @@
 
       historialReportes.forEach((rep, idx) => {
         const totalMin = rep.demoras.reduce((a, b) => a + b.duracionMin, 0);
+        const tieneHorometros = rep.horometroInicial && rep.horometroFinal;
+
         const card = document.createElement('div');
         card.className = 'card-historial bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5';
         card.innerHTML = `
           <div class="flex items-start justify-between">
-            <div>
+            <div class="space-y-0.5">
               <p class="text-xs font-bold text-white">${escaparHTML(rep.equipo || 'Equipo Sin Nombre')}</p>
               <p class="text-[11px] text-slate-400">${escaparHTML(rep.dia)} • ${escaparHTML(rep.turno)} • ${escaparHTML(rep.nombre || 'Operador N/A')}</p>
+              ${tieneHorometros ? `
+                <p class="text-[10px] text-amber-300 font-mono flex items-center gap-1 pt-0.5">
+                  <span>⚙️</span> H: ${escaparHTML(rep.horometroInicial)} ➔ ${escaparHTML(rep.horometroFinal)} (${escaparHTML(rep.horasMotor || '0')} hrs motor)
+                </p>
+              ` : ''}
             </div>
             <span class="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
               ${(totalMin / 60).toFixed(1)} hrs
@@ -677,10 +877,40 @@
     // --- ACCIONES DE FORMULARIO ---
 
     window.eliminarDemora = function(index) {
+      const estabaEditando = demorasTurno[index] && demorasTurno[index].id === editandoId;
       demorasTurno.splice(index, 1);
+      if (estabaEditando) terminarEdicion();
       renderizarListaDemoras();
       autoGuardarBorrador();
+      actualizarAvisoDemora();
     };
+
+    // Carga una demora en el formulario para modificarla
+    window.editarDemora = function(index) {
+      const d = demorasTurno[index];
+      if (!d) return;
+      editandoId = d.id;
+      inputHoraInicio.value = d.horaInicio;
+      inputHoraFin.value = d.horaFin;
+      if (CATALOGO.some(c => c.codigo === d.codigo)) seleccionarCodigo(d.codigo);
+      inputComentario.value = d.comentario || '';
+      actualizarCalculoDuracion();
+      renderizarListaDemoras();
+      inputHoraInicio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    // Sale del modo edición y deja el formulario listo para la siguiente demora
+    function terminarEdicion() {
+      editandoId = null;
+      solapeConfirmado = false;
+      inputComentario.value = '';
+      const ultima = demorasTurno[demorasTurno.length - 1];
+      if (ultima) {
+        inputHoraInicio.value = ultima.horaFin;
+        inputHoraFin.value = sumarMinutos(ultima.horaFin, 30);
+      }
+      actualizarCalculoDuracion();
+    }
 
     window.eliminarReporteHistorial = function(index) {
       if (confirm('¿Eliminar este reporte archivado?')) {
@@ -698,11 +928,22 @@
         return;
       }
 
+      // Misma hora de inicio y fin: la demora duraría 0 min
+      if (inicio === fin) {
+        actualizarAvisoDemora();
+        return;
+      }
+
+      // Empalme con otra demora: el primer toque avisa, el segundo confirma
+      if (buscarSolape(inicio, fin, editandoId) && !solapeConfirmado) {
+        solapeConfirmado = true;
+        actualizarTextoBoton();
+        return;
+      }
+
       const duracion = calcularDiferenciaMinutos(inicio, fin);
       const cat = CATALOGO.find(c => c.codigo === codigoActivo);
-
-      const nuevaDemora = {
-        id: Date.now().toString(),
+      const datos = {
         horaInicio: inicio,
         horaFin: fin,
         duracionMin: duracion,
@@ -711,13 +952,26 @@
         comentario: inputComentario.value.trim()
       };
 
-      demorasTurno.push(nuevaDemora);
+      if (editandoId !== null) {
+        const i = demorasTurno.findIndex(d => d.id === editandoId);
+        if (i >= 0) demorasTurno[i] = { ...demorasTurno[i], ...datos };
+        editandoId = null;
+        solapeConfirmado = false;
+        inputComentario.value = '';
+        renderizarListaDemoras();
+        autoGuardarBorrador();
+        terminarEdicion();
+        return;
+      }
+
+      demorasTurno.push({ id: Date.now().toString(), ...datos });
       renderizarListaDemoras();
       autoGuardarBorrador();
 
-      // Limpiar inputs de demora
+      // La hora final pasa a ser la inicial de la siguiente demora
       inputComentario.value = '';
-      inputHoraInicio.value = fin; // El fin anterior se vuelve el nuevo inicio sugerido
+      inputHoraInicio.value = fin;
+      inputHoraFin.value = sumarMinutos(fin, 30);
       actualizarCalculoDuracion();
     }
 
@@ -727,6 +981,25 @@
         return;
       }
 
+      // Validación de horómetros
+      const valIni = inputHorometroInicial.value.trim();
+      const valFin = inputHorometroFinal.value.trim();
+      let deltaHoras = '';
+
+      if (valIni !== '' && valFin !== '') {
+        const hIni = parseFloat(valIni);
+        const hFin = parseFloat(valFin);
+
+        if (!isNaN(hIni) && !isNaN(hFin)) {
+          if (hFin < hIni) {
+            alert('El horómetro final no puede ser menor que el inicial. Por favor revisa las lecturas antes de archivar el turno.');
+            inputHorometroFinal.focus();
+            return;
+          }
+          deltaHoras = (hFin - hIni).toFixed(1);
+        }
+      }
+
       const nuevoReporte = {
         id: Date.now().toString(),
         fechaArchivado: new Date().toISOString(),
@@ -734,6 +1007,9 @@
         equipo: inputEquipo.value.trim(),
         turno: selectTurno.value,
         dia: inputDia.value,
+        horometroInicial: valIni,
+        horometroFinal: valFin,
+        horasMotor: deltaHoras,
         demoras: [...demorasTurno]
       };
 
@@ -742,39 +1018,66 @@
 
       // Limpiar turno actual
       demorasTurno = [];
+      editandoId = null;
+      inputHorometroInicial.value = '';
+      inputHorometroFinal.value = '';
+      calcularHorasMotor();
       renderizarListaDemoras();
       autoGuardarBorrador();
+      actualizarCalculoDuracion();
 
       alert('¡Turno finalizado y archivado con éxito en el teléfono!');
     }
 
-    // --- MOTOR GENERADOR DE CSV (UTF-8 CON BOM) ---
+    // --- GENERADOR CSV CON HORÓMETROS (UTF-8 CON BOM) ---
 
     function construirContenidoCSV(reporte) {
-      // BOM (﻿) esencial para que Excel reconozca acentos y caracteres latinos
-      let csv = '﻿';
+      let csv = '\uFEFF';
+      csv += 'Item,FECHA,Turno,OPERADOR,EQUIPO,Horometro Inicial,Horometro Final,Horas Motor,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
 
-      // Metadatos
-      csv += 'REPORTE OPERATIVO DE DEMORAS\n';
-      csv += `Operador,"${(reporte.nombre || 'N/A').replace(/"/g, '""')}"\n`;
-      csv += `Equipo,"${(reporte.equipo || 'N/A').replace(/"/g, '""')}"\n`;
-      csv += `Turno,"${reporte.turno}"\n`;
-      csv += `Fecha,"${reporte.dia}"\n`;
+      const fechaCSV = formatearFechaDMA(reporte.dia);
+      const turnoCSV = abreviarTurno(reporte.turno);
+      const operadorCSV = csvTexto(reporte.nombre || 'N/A');
+      const equipoCSV = csvTexto(reporte.equipo || 'N/A');
 
-      const totalMin = reporte.demoras.reduce((acc, d) => acc + d.duracionMin, 0);
-      csv += `Horas Totales Parada,${(totalMin / 60).toFixed(2)}\n\n`;
+      const hIniCSV = reporte.horometroInicial ? reporte.horometroInicial : '';
+      const hFinCSV = reporte.horometroFinal ? reporte.horometroFinal : '';
+      const hMotorCSV = reporte.horasMotor ? reporte.horasMotor : '';
 
-      // Encabezados de tabla
-      csv += 'Item,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
-
-      // Filas
       reporte.demoras.forEach((d, idx) => {
-        const comentarioEscapado = `"${(d.comentario || '').replace(/"/g, '""')}"`;
-        const descEscapada = `"${(d.descripcion || '').replace(/"/g, '""')}"`;
-        csv += `${idx + 1},${d.horaInicio},${d.horaFin},${d.duracionMin},${d.codigo},${descEscapada},${comentarioEscapado}\n`;
+        csv += [
+          idx + 1,
+          fechaCSV,
+          turnoCSV,
+          operadorCSV,
+          equipoCSV,
+          hIniCSV,
+          hFinCSV,
+          hMotorCSV,
+          d.horaInicio,
+          d.horaFin,
+          d.duracionMin,
+          d.codigo,
+          csvTexto(d.descripcion),
+          csvTexto(d.comentario)
+        ].join(',') + '\n';
       });
 
       return csv;
+    }
+
+    function csvTexto(valor) {
+      return `"${String(valor == null ? '' : valor).replace(/"/g, '""')}"`;
+    }
+
+    function formatearFechaDMA(iso) {
+      const partes = String(iso || '').split('-');
+      if (partes.length !== 3) return iso || '';
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function abreviarTurno(turno) {
+      return /turno\s*1/i.test(turno || '') ? '1RA' : '2DA';
     }
 
     function obtenerNombreArchivo(reporte) {
@@ -783,7 +1086,6 @@
       return `Reporte_${eq}_${fecha}.csv`;
     }
 
-    // Descarga un texto como archivo CSV
     function descargarBlobCSV(contenido, nombreArchivo) {
       const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -818,19 +1120,22 @@
       const contenidoCSV = construirContenidoCSV(reporte);
       const nombreArchivo = obtenerNombreArchivo(reporte);
 
-      // Resumen textual para WhatsApp
       const totalMin = reporte.demoras.reduce((a, b) => a + b.duracionMin, 0);
       let mensajeTexto = `*REPORTE DE DEMORAS*\n`;
       mensajeTexto += `🚜 *Equipo:* ${reporte.equipo || 'N/A'}\n`;
       mensajeTexto += `👤 *Operador:* ${reporte.nombre || 'N/A'}\n`;
-      mensajeTexto += `📅 *Fecha:* ${reporte.dia} (${reporte.turno})\n`;
+      mensajeTexto += `📅 *Fecha:* ${formatearFechaDMA(reporte.dia)} (${abreviarTurno(reporte.turno)})\n`;
+
+      if (reporte.horometroInicial && reporte.horometroFinal) {
+        mensajeTexto += `⚙️ *Horómetro:* ${reporte.horometroInicial} ➔ ${reporte.horometroFinal} (${reporte.horasMotor || '0'} hrs motor)\n`;
+      }
+
       mensajeTexto += `⏱ *Total Demoras:* ${reporte.demoras.length} eventos (${(totalMin / 60).toFixed(2)} hrs)\n\n`;
       mensajeTexto += `*Detalle:* \n`;
       reporte.demoras.forEach(d => {
         mensajeTexto += `• ${d.horaInicio}-${d.horaFin} [${d.codigo}]: ${d.comentario || d.descripcion}\n`;
       });
 
-      // Intentar Web Share API con archivo nativo (funciona en teléfonos móviles modernos)
       try {
         const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
         if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -842,12 +1147,10 @@
           return;
         }
       } catch (err) {
-        // El usuario canceló la hoja nativa: no hacer nada más
         if (err && err.name === 'AbortError') return;
-        console.log('Compartir archivo no disponible, ejecutando alternativa.');
+        console.log('Compartir archivo no disponible, aplicando alternativa.');
       }
 
-      // Si no soporta compartir archivo directo: descarga el CSV y abre WhatsApp con el resumen
       descargarCSV(index);
       const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`;
       window.open(urlWhatsApp, '_blank');
@@ -856,45 +1159,46 @@
     // --- ASIGNACIÓN DE EVENTOS ---
 
     function asignarEventos() {
-      // Auto-guardado en entradas de texto
-      [inputNombre, inputEquipo, selectTurno, inputDia].forEach(el => {
+      [inputNombre, inputEquipo, selectTurno, inputDia, inputHorometroInicial, inputHorometroFinal].forEach(el => {
         el.addEventListener('input', autoGuardarBorrador);
         el.addEventListener('change', autoGuardarBorrador);
       });
 
-      // Recalcular la duración al cambiar las horas
+      [inputHorometroInicial, inputHorometroFinal].forEach(el => {
+        el.addEventListener('input', calcularHorasMotor);
+        el.addEventListener('change', calcularHorasMotor);
+      });
+
       [inputHoraInicio, inputHoraFin].forEach(el => {
         el.addEventListener('input', actualizarCalculoDuracion);
         el.addEventListener('change', actualizarCalculoDuracion);
       });
 
-      // Modal catálogo demoras
       btnAbrirCatalogo.addEventListener('click', () => modalCatalogo.classList.remove('hidden'));
       btnCerrarModal.addEventListener('click', () => modalCatalogo.classList.add('hidden'));
 
-      // Modal catálogo equipos
       btnAbrirEquipos.addEventListener('click', () => modalEquipos.classList.remove('hidden'));
       btnCerrarModalEquipos.addEventListener('click', () => modalEquipos.classList.add('hidden'));
 
-      // Cerrar modales al tocar el fondo oscuro
       [modalCatalogo, modalEquipos, modalCSV].forEach(modal => {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) modal.classList.add('hidden');
         });
       });
 
-      // Acciones
       btnAgregarDemora.addEventListener('click', agregarDemora);
+      btnCancelarEdicion.addEventListener('click', () => {
+        terminarEdicion();
+        renderizarListaDemoras();
+      });
       btnFinalizarTurno.addEventListener('click', finalizarTurno);
 
-      // Modal visor CSV
       btnCerrarCSV.addEventListener('click', () => modalCSV.classList.add('hidden'));
       btnDescargarDesdeModal.addEventListener('click', () => {
         descargarBlobCSV(csvTemporal.contenido, csvTemporal.nombreArchivo);
       });
     }
 
-    // Arrancar la aplicación al cargar el documento
     window.addEventListener('DOMContentLoaded', init);
 
     // --- SERVICE WORKER (funcionamiento sin conexión) ---
@@ -905,6 +1209,7 @@
         });
       });
     }
+
   </script>
 </body>
 </html>

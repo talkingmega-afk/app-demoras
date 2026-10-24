@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el dispositivo para que abra sin internet.
 // Si publicas cambios, sube el número de VERSION para que los teléfonos se actualicen.
-const VERSION = 'v1';
+const VERSION = 'v5';
 const CACHE = `demoras-${VERSION}`;
 
 const ARCHIVOS = [
