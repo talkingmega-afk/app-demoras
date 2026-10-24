@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el dispositivo para que abra sin internet.
 // Si publicas cambios, sube el número de VERSION para que los teléfonos se actualicen.
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = `demoras-${VERSION}`;
 
 const ARCHIVOS = [
@@ -41,31 +41,23 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(peticion.url);
   if (url.origin !== self.location.origin) return;
 
-  // Páginas: primero la red (para tomar actualizaciones) y, si falla, la copia guardada
-  if (peticion.mode === 'navigate') {
-    event.respondWith(
-      fetch(peticion)
-        .then((respuesta) => {
-          const copia = respuesta.clone();
-          caches.open(CACHE).then((cache) => cache.put('./index.html', copia));
-          return respuesta;
-        })
-        .catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
-    );
-    return;
-  }
-
-  // Resto de archivos: primero la copia guardada, y si no existe se pide a la red
+  // Red primero (siempre la versión más nueva, sin usar copias viejas del navegador).
+  // Si no hay conexión, se usa la copia guardada en el dispositivo.
   event.respondWith(
-    caches.match(peticion).then((guardada) => {
-      if (guardada) return guardada;
-      return fetch(peticion).then((respuesta) => {
+    fetch(peticion, { cache: 'no-cache' })
+      .then((respuesta) => {
         if (respuesta && respuesta.status === 200) {
           const copia = respuesta.clone();
           caches.open(CACHE).then((cache) => cache.put(peticion, copia));
         }
         return respuesta;
-      });
-    })
+      })
+      .catch(() =>
+        caches.match(peticion, { ignoreSearch: true }).then((guardada) => {
+          if (guardada) return guardada;
+          if (peticion.mode === 'navigate') return caches.match('./index.html');
+          return Response.error();
+        })
+      )
   );
 });

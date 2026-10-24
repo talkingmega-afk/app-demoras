@@ -269,6 +269,8 @@
         </div>
       </section>
 
+      <p class="text-center text-[10px] text-slate-600 pb-2">Versión <span id="versionApp"></span></p>
+
     </div>
 
     <!-- MODAL CATÁLOGO DE DEMORAS -->
@@ -541,7 +543,11 @@
 
     // --- INICIALIZACIÓN Y PERSISTENCIA ---
 
+    // Debe coincidir con VERSION de sw.js
+    const APP_VERSION = 'v6';
+
     function init() {
+      document.getElementById('versionApp').textContent = APP_VERSION;
       inputDia.value = fechaLocalISO(new Date());
 
       const ahora = new Date();
@@ -1203,10 +1209,20 @@
 
     // --- SERVICE WORKER (funcionamiento sin conexión) ---
     if ('serviceWorker' in navigator) {
+      const teniaControlador = !!navigator.serviceWorker.controller;
+      let recargando = false;
+
+      // Cuando una versión nueva toma el control, se recarga una vez para mostrarla
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!teniaControlador || recargando) return;
+        recargando = true;
+        window.location.reload();
+      });
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
-          console.error('No se pudo registrar el service worker', err);
-        });
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+          .then(reg => reg.update())
+          .catch(err => console.error('No se pudo registrar el service worker', err));
       });
     }
 
