@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Reporte Operativo de Demoras",
-  "short_name": "Demoras",
-  "description": "Registro offline de demoras operativas por equipo y turno, con exportación a CSV y WhatsApp.",
+  "name": "Control Operativo de Mina y Acarreo",
+  "short_name": "Operaciones Mina",
+  "description": "Registro offline de demoras operativas y control de despacho de diésel por pipa, con exportación a CSV y WhatsApp.",
   "lang": "es",
   "dir": "ltr",
   "start_url": "./",
@@ -11,7 +11,10 @@
   "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "icons/icon-192.png",

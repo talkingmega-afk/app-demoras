@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Reporte Operativo de Demoras</title>
-  <meta name="description" content="Registro offline de demoras operativas por equipo y turno, con exportación a CSV y WhatsApp." />
+  <title>Control Operativo de Mina y Acarreo</title>
+  <meta name="description" content="Registro offline de demoras operativas y control de despacho de diésel por pipa / marimba con exportación a CSV y WhatsApp." />
 
   <!-- PWA -->
   <link rel="manifest" href="./manifest.json" />
@@ -14,32 +14,18 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Demoras" />
+  <meta name="apple-mobile-web-app-title" content="Operaciones Mina" />
 
   <!-- Tailwind compilado en local (funciona sin internet) -->
   <link rel="stylesheet" href="./tailwind.css" />
   <style>
-    /* Estilos para sensación de App Nativa */
-    body {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    input, textarea, select {
-      user-select: text;
-    }
-    .scrollbar-none::-webkit-scrollbar {
-      display: none;
-    }
-    .scrollbar-none {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    body { -webkit-tap-highlight-color: transparent; user-select: none; }
+    input, textarea, select { user-select: text; }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* ALTA VISIBILIDAD PARA SELECTORES DE HORA */
-    input[type="time"] {
-      color-scheme: dark;
-      letter-spacing: 0;
-    }
+    /* Selectores de hora de alta visibilidad (sin separación de letras para que quepa "10:01 PM") */
+    input[type="time"] { color-scheme: dark; letter-spacing: 0; }
     input[type="time"]::-webkit-calendar-picker-indicator {
       filter: invert(0.9) brightness(1.2);
       cursor: pointer;
@@ -50,7 +36,8 @@
     #inputHoraInicio::-webkit-calendar-picker-indicator {
       filter: invert(75%) sepia(85%) saturate(700%) hue-rotate(360deg);
     }
-    #inputHoraFin::-webkit-calendar-picker-indicator {
+    #inputHoraFin::-webkit-calendar-picker-indicator,
+    #inputHoraCargaDiesel::-webkit-calendar-picker-indicator {
       filter: invert(75%) sepia(80%) saturate(600%) hue-rotate(110deg);
     }
   </style>
@@ -58,18 +45,19 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen flex justify-center items-start sm:py-6 sm:px-4 font-sans antialiased">
 
   <!-- Contenedor Maqueta Móvil -->
-  <main class="w-full max-w-md bg-slate-950 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-screen sm:min-h-[860px] border border-slate-800 relative">
+  <main class="w-full max-w-md bg-slate-950 sm:rounded-3xl shadow-2xl overflow-clip flex flex-col min-h-screen sm:min-h-[880px] border border-slate-800 relative">
 
-    <!-- Barra Superior / Header de la App -->
-    <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-20">
+    <!-- Encabezado y pestañas: un solo bloque fijo arriba -->
+    <div class="sticky top-0 z-20">
+    <header class="bg-slate-900 border-b border-slate-800 p-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
+          <div id="headerIcono" class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
             ⏱
           </div>
           <div>
-            <h1 class="font-bold text-base text-white tracking-wide leading-tight">Control de Demoras</h1>
-            <p class="text-xs text-slate-400">Reporte de Operaciones</p>
+            <h1 id="headerTitulo" class="font-bold text-base text-white tracking-wide leading-tight">Control Operativo</h1>
+            <p id="headerSubtitulo" class="text-xs text-slate-400">Camiones y Mantenimiento</p>
           </div>
         </div>
 
@@ -81,14 +69,29 @@
       </div>
     </header>
 
-    <!-- Contenido Scrollable -->
-    <div class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
+    <!-- NAVEGACIÓN ENTRE MÓDULOS (PESTAÑAS SUPERIORES) -->
+    <nav class="flex border-b border-slate-800 bg-slate-900 p-1.5 gap-1.5">
+      <button type="button" id="tabBtnDemoras"
+        class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm">
+        <span>🚜</span> <span class="truncate">Camiones y Caminos</span>
+      </button>
+      <button type="button" id="tabBtnDiesel"
+        class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80">
+        <span>⛽</span> <span class="truncate">Captura Diésel (Pipa)</span>
+      </button>
+    </nav>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MÓDULO 1: CAMIONES Y MANTENIMIENTO DE CAMINOS (CONTROL DE DEMORAS)       -->
+    <!-- ========================================================================= -->
+    <div id="vistaDemoras" class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
 
       <!-- TARJETA 1: Cabecera de Turno y Horómetros -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <span>📋</span> Datos del Turno
+            <span>📋</span> Datos del Turno (Acarreo)
           </h2>
           <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Auto-guardado</span>
         </div>
@@ -157,7 +160,7 @@
         </div>
       </section>
 
-      <!-- TARJETA 2: Captura de Demoras (Selector de Horas con Alta Visibilidad) -->
+      <!-- TARJETA 2: Captura de Demoras -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
@@ -167,9 +170,8 @@
         </div>
 
         <div class="space-y-3">
-          <!-- BLOQUE DE HORARIOS RESALTADOS PARA ALTA VISIBILIDAD -->
+          <!-- Horarios de Alta Visibilidad -->
           <div class="grid grid-cols-2 gap-2.5 bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
-            <!-- Hora Inicial: Acento Ámbar / Dorado -->
             <div class="bg-amber-950/30 p-2 rounded-xl border border-amber-500/20">
               <label class="flex items-center justify-between text-[11px] font-bold text-amber-400 mb-1 tracking-wide">
                 <span class="flex items-center gap-1"><span>🕒</span> Hora Inicial</span>
@@ -179,7 +181,6 @@
                 class="w-full bg-slate-900 border-2 border-amber-500/60 rounded-xl px-1 py-2.5 text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400 text-center font-mono shadow-inner cursor-pointer transition-all" />
             </div>
 
-            <!-- Hora Final: Acento Esmeralda / Verde -->
             <div class="bg-emerald-950/30 p-2 rounded-xl border border-emerald-500/20">
               <label class="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1 tracking-wide">
                 <span class="flex items-center gap-1"><span>🏁</span> Hora Final</span>
@@ -190,7 +191,7 @@
             </div>
           </div>
 
-          <!-- Selector de Código (Abre Modal de Catálogo) -->
+          <!-- Selector de Código (Modal Catálogo) -->
           <div>
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Código de Demora</label>
             <button type="button" id="btnAbrirCatalogo"
@@ -236,23 +237,21 @@
 
         <p id="avisoTotalTurno" role="status" class="hidden text-[11px] font-medium text-red-400 bg-red-950/40 border border-red-500/30 rounded-xl px-3 py-2 mb-2"></p>
 
-        <!-- Lista vacía / Lista dinámica -->
         <div id="contenedorListaDemoras" class="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-none">
           <p id="mensajeListaVacia" class="text-center text-xs text-slate-500 py-6 italic">
             No has agregado demoras en este turno aún.
           </p>
         </div>
 
-        <!-- Botón Guardar / Finalizar Turno -->
         <div id="panelCierreTurno" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
           <button type="button" id="btnFinalizarTurno"
-            class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition-all">
+            class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg transition-all">
             <span>💾</span> Finalizar y Archivar Turno
           </button>
         </div>
       </section>
 
-      <!-- TARJETA 4: Historial de Reportes Guardados (Listos para Enviar) -->
+      <!-- TARJETA 4: Historial de Reportes Guardados (Demoras) -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
@@ -269,9 +268,247 @@
         </div>
       </section>
 
-      <p class="text-center text-[10px] text-slate-600 pb-2">Versión <span id="versionApp"></span></p>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MÓDULO 2: CAPTURA DIÉSEL (PIPA / MARIMBA)                                  -->
+    <!-- ========================================================================= -->
+    <div id="vistaDiesel" class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4 hidden">
+
+      <!-- TARJETA 1 DIESEL: Datos del Turno de la Pipa -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+            <span>🛢</span> Turno Pipa / Marimba
+          </h2>
+          <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Auto-guardado</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Operador Marimbero</label>
+            <input type="text" id="inputDieselOperador" placeholder="Ej. Roberto Garza"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Pipa Asignada</label>
+            <input type="text" id="inputDieselPipaId" value="PIPA-01" placeholder="Ej. PIPA-01"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-sky-400 font-bold focus:outline-none focus:border-sky-500 transition-colors font-mono" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Turno</label>
+            <select id="selectDieselTurno"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors">
+              <option value="Turno 1 (Día)">Turno 1ra (Día)</option>
+              <option value="Turno 2 (Noche)">Turno 2da (Noche)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha</label>
+            <input type="date" id="inputDieselDia"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors" />
+          </div>
+
+          <!-- Horómetros de la Pipa -->
+          <div class="col-span-2 pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                <span>⚙️</span> Horómetro de Pipa
+              </label>
+              <span id="badgeDieselHorasMotor" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                0.0 hrs motor
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <input type="number" step="0.1" id="inputDieselHIni" placeholder="H. Inicial"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono text-center focus:outline-none focus:border-sky-500 transition-colors" />
+              <input type="number" step="0.1" id="inputDieselHFin" placeholder="H. Final"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono text-center focus:outline-none focus:border-sky-500 transition-colors" />
+            </div>
+          </div>
+
+          <!-- Inventario de Diésel de la Pipa -->
+          <div class="col-span-2 pt-2 border-t border-slate-800/80">
+            <label class="block text-[11px] font-semibold text-sky-400 mb-1 flex items-center gap-1">
+              <span>⛽</span> Inventario Cisterna (Litros)
+            </label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Diésel Inicial Pipa</label>
+                <input type="number" step="1" id="inputDieselLitrosIniciales" placeholder="Lts al iniciar"
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-amber-300 font-mono text-center focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">Recargas a Pipa (total)</label>
+                <div id="badgeTotalRecargas"
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-emerald-300 font-mono text-center">+0 L</div>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-2">
+              <input type="number" step="1" min="0" inputmode="decimal" id="inputRecargaLitros" placeholder="Lts de la recarga"
+                class="flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-emerald-300 font-mono text-center focus:outline-none focus:border-sky-500" />
+              <button type="button" id="btnAgregarRecarga"
+                class="shrink-0 bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-emerald-300 font-semibold px-3 py-2 rounded-xl text-xs border border-emerald-500/30">
+                ➕ Recarga
+              </button>
+            </div>
+            <div id="listaRecargasDiesel" class="flex flex-wrap gap-1.5 mt-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TARJETA 2 DIESEL: Registro de Despacho a Equipos -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+            <span>🎯</span> Registrar Despacho a Equipo
+          </h2>
+          <span id="badgeLitrosDespacho" class="text-[11px] font-mono font-bold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 rounded">
+            0.0 Lts
+          </span>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Pertenencia y Entrada Abierta de Equipo Receptor -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">Pertenencia / Flota</label>
+              <select id="selectDieselPertenencia"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-sky-400 font-bold focus:outline-none focus:border-sky-500 transition-colors">
+                <option value="Mafer">Mafer (Propio)</option>
+                <option value="Empresa">Empresa (Externo)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">Equipo Receptor</label>
+              <input type="text" id="inputEquipoReceptorDiesel" placeholder="Ej. CV-173, PALA-02..." list="sugerenciasEquiposDiesel"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-bold uppercase focus:outline-none focus:border-sky-500 transition-colors" />
+              <datalist id="sugerenciasEquiposDiesel"></datalist>
+            </div>
+          </div>
+          <p id="avisoEquipoDiesel" class="hidden text-[11px] font-medium rounded-lg px-2.5 py-1.5"></p>
+
+          <!-- Hora del Despacho -->
+          <div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800">
+            <label class="block text-[11px] font-bold text-emerald-400 mb-1">🕒 Hora del Despacho</label>
+            <input type="time" id="inputHoraCargaDiesel"
+              class="w-full bg-slate-900 border-2 border-emerald-500/60 rounded-xl px-3 py-2 text-base font-bold text-emerald-300 text-center font-mono cursor-pointer" />
+          </div>
+
+          <!-- Cuenta Litros (Inicial y Final) -->
+          <div class="bg-sky-950/30 p-2.5 rounded-2xl border border-sky-500/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-sky-300 flex items-center gap-1">
+                <span>🔢</span> Cuenta-Litros (Flujómetro)
+              </span>
+              <span class="text-[10px] text-slate-400">Lectura de bomba</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[10px] font-medium text-slate-300 mb-0.5">C. Litros Inicial</label>
+                <input type="number" step="0.1" id="inputCLInicial" placeholder="Ej. 12540.0"
+                  class="w-full bg-slate-900 border border-sky-500/40 rounded-xl px-2.5 py-2 text-sm font-bold text-white font-mono text-center focus:outline-none focus:border-sky-400" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-medium text-slate-300 mb-0.5">C. Litros Final</label>
+                <input type="number" step="0.1" id="inputCLFinal" placeholder="Ej. 12860.5"
+                  class="w-full bg-slate-900 border border-sky-500/40 rounded-xl px-2.5 py-2 text-sm font-bold text-sky-300 font-mono text-center focus:outline-none focus:border-sky-400" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Horómetro Opcional del Equipo Receptor (Para Control L/h) -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">H. Equipo Receptor (Opc.)</label>
+              <input type="number" step="0.1" id="inputHorometroEquipoReceptor" placeholder="Horóm. camión"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white font-mono text-center focus:outline-none focus:border-sky-500" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-400 mb-1">Observación / Nota</label>
+              <input type="text" id="inputNotaDiesel" placeholder="Ej. Tanque lleno"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500" />
+            </div>
+          </div>
+
+          <!-- Botón Agregar Despacho -->
+          <p id="avisoSaldoDiesel" role="status" class="hidden text-[11px] font-medium rounded-xl px-3 py-2"></p>
+          <button type="button" id="btnAgregarDespachoDiesel"
+            class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-sky-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-sky-500/30 transition-all shadow-sm">
+            <span id="iconoBtnDespacho">➕</span> <span id="textoBtnDespacho">Registrar Carga de Diésel</span>
+          </button>
+          <button type="button" id="btnCancelarEdicionDiesel"
+            class="hidden w-full text-slate-400 hover:text-white text-xs font-semibold py-2 rounded-xl border border-slate-700/80">
+            Cancelar edición
+          </button>
+        </div>
+      </section>
+
+      <!-- TARJETA 3 DIESEL: Balance y Cargas del Turno -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">
+            Despachos Realizados (<span id="contadorDespachosDiesel">0</span>)
+          </h2>
+          <span id="totalLitrosDespachados" class="text-xs font-bold text-sky-400">Total: 0.0 L</span>
+        </div>
+
+        <!-- Balance en Pipa -->
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 mb-3 grid grid-cols-2 gap-2 text-[11px]">
+          <div>
+            <span class="text-slate-400 block">Capacidad Disp.:</span>
+            <span id="badgeDieselDisponible" class="font-mono font-bold text-slate-200">0 L</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Saldo Final Est.:</span>
+            <span id="badgeDieselSaldoFinal" class="font-mono font-bold text-emerald-400">0 L</span>
+          </div>
+        </div>
+
+        <!-- Lista de Despachos -->
+        <div id="contenedorListaDiesel" class="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-none">
+          <p id="mensajeListaDieselVacia" class="text-center text-xs text-slate-500 py-6 italic">
+            No se han registrado despachos en este turno aún.
+          </p>
+        </div>
+
+        <!-- Botón Guardar / Finalizar Turno Diésel -->
+        <div id="panelCierreTurnoDiesel" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
+          <button type="button" id="btnFinalizarTurnoDiesel"
+            class="w-full bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg transition-all">
+            <span>💾</span> Finalizar y Archivar Turno Pipa
+          </button>
+        </div>
+      </section>
+
+      <!-- TARJETA 4 DIESEL: Historial Reportes Pipa -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span>📦</span>
+            <span>Reportes Pipa Almacenados (<span id="contadorHistorialDiesel">0</span>)</span>
+          </h2>
+          <span class="text-[10px] text-slate-400">Listos p/ WhatsApp</span>
+        </div>
+
+        <div id="contenedorHistorialDiesel" class="space-y-2.5">
+          <p id="mensajeHistorialDieselVacio" class="text-center text-xs text-slate-500 py-4 italic">
+            No hay reportes de pipa archivados.
+          </p>
+        </div>
+      </section>
 
     </div>
+
+    <p class="text-center text-[10px] text-slate-600 pb-3">Versión <span id="versionApp"></span></p>
+
+    <!-- ========================================================================= -->
+    <!-- MODALES GLOBALES                                                          -->
+    <!-- ========================================================================= -->
 
     <!-- MODAL CATÁLOGO DE DEMORAS -->
     <div id="modalCatalogo" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
@@ -283,27 +520,21 @@
           </div>
           <button id="btnCerrarModal" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
         </div>
-
-        <div id="listaOpcionesCatalogo" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none">
-          <!-- Generado vía JS -->
-        </div>
+        <div id="listaOpcionesCatalogo" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none"></div>
       </div>
     </div>
 
-    <!-- MODAL CATÁLOGO DE EQUIPOS -->
+    <!-- MODAL CATÁLOGO DE EQUIPOS (COMPARTIDO DEMORAS Y DIÉSEL) -->
     <div id="modalEquipos" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden">
       <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-4 max-h-[85vh] flex flex-col">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
             <h3 class="text-base font-bold text-white">Catálogo de Equipos</h3>
-            <p class="text-xs text-slate-400">Selecciona el equipo asignado</p>
+            <p id="subtituloModalEquipos" class="text-xs text-slate-400">Selecciona el equipo</p>
           </div>
           <button id="btnCerrarModalEquipos" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
         </div>
-
-        <div id="listaOpcionesEquipos" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none">
-          <!-- Generado vía JS -->
-        </div>
+        <div id="listaOpcionesEquipos" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none"></div>
       </div>
     </div>
 
@@ -311,7 +542,7 @@
     <div id="modalCSV" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
       <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-4 flex flex-col max-h-[80vh]">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-          <h3 class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
+          <h3 id="modalCSVHeader" class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
             <span>📄</span> Contenido CSV Nativo (UTF-8 BOM)
           </h3>
           <button id="btnCerrarCSV" class="text-slate-400 hover:text-white text-base">✕</button>
@@ -325,11 +556,10 @@
 
   </main>
 
-  <!-- LÓGICA JAVASCRIPT: PERSISTENCIA OFFLINE, HORÓMETROS, CSV & WHATSAPP -->
+  <!-- LÓGICA JAVASCRIPT: PESTAÑAS, PERSISTENCIA OFFLINE, DEMORAS Y DIÉSEL -->
   <script>
-    // Catálogo maestro estandarizado
+    // --- CATÁLOGOS MAESTROS ---
     const CATALOGO = [
-      // 2: DEMORAS OPERATIVAS (Stand By)
       { codigo: '200', desc: 'Ingreso/ salida de personal', cat: 'Stand By' },
       { codigo: '201', desc: 'Pueble/DDS', cat: 'Stand By' },
       { codigo: '202', desc: 'Checklist de equipo', cat: 'Stand By' },
@@ -340,8 +570,6 @@
       { codigo: '207', desc: 'Orden y Limpieza', cat: 'Stand By' },
       { codigo: '208', desc: 'Otras demoras operativas (1)', cat: 'Stand By' },
       { codigo: '209', desc: 'Traslado de equipo a area operativa', cat: 'Stand By' },
-
-      // 3: DEMORAS OPERATIVAS (Delay)
       { codigo: '300', desc: 'Traslado de equipo a taller (inicio de turno)', cat: 'Delay' },
       { codigo: '301', desc: 'Traslado de equipo a otra area/mina', cat: 'Delay' },
       { codigo: '302', desc: 'Traslado de area a taller por inoperatividad', cat: 'Delay' },
@@ -358,8 +586,6 @@
       { codigo: '315', desc: 'Demoras en el traslado de equipo (Bloq.acceso)', cat: 'Delay' },
       { codigo: '316', desc: 'Falta de operador', cat: 'Delay' },
       { codigo: '318', desc: 'Esperando cargador', cat: 'Delay' },
-
-      // 4: DEMORAS NO OPERATIVAS (Maintenance)
       { codigo: '400', desc: 'Equipo inoperativo', cat: 'Mantenimiento' },
       { codigo: '401', desc: 'Falla mecánica', cat: 'Mantenimiento' },
       { codigo: '402', desc: 'Falla electrica', cat: 'Mantenimiento' },
@@ -367,10 +593,9 @@
       { codigo: '404', desc: 'Intervencion preventivo (Inicio de turno)', cat: 'Mantenimiento' },
       { codigo: '405', desc: 'Intervencion correctivo', cat: 'Mantenimiento' },
       { codigo: '406', desc: 'Daño operativo', cat: 'Mantenimiento' },
-      { codigo: '407', desc: 'Otras demoras no operativas', cat: 'Mantenimiento' },
+      { codigo: '407', desc: 'Otras demoras no operativas', cat: 'Mantenimiento' }
     ];
 
-    // Catálogo oficial de Equipos
     const CATALOGO_EQUIPOS = [
       { id: 'CV-173', tipo: 'CAMION VOLTEO' },
       { id: 'CV-174', tipo: 'CAMION VOLTEO' },
@@ -397,53 +622,66 @@
       { id: 'BH-20', tipo: 'RETROEXCAVADORA' }
     ];
 
-    const STORAGE_KEY_BORRADOR = 'app_demoras_borrador_v1';
-    const STORAGE_KEY_HISTORIAL = 'app_demoras_historial_v1';
+    // Claves de Almacenamiento Local (100% Offline)
+    const STORAGE_KEY_BORRADOR_DEMORAS = 'app_demoras_borrador_v2';
+    const STORAGE_KEY_HISTORIAL_DEMORAS = 'app_demoras_historial_v2';
+    const STORAGE_KEY_BORRADOR_DIESEL = 'app_diesel_borrador_v1';
+    const STORAGE_KEY_HISTORIAL_DIESEL = 'app_diesel_historial_v1';
 
-    // Estado en Memoria
+    // Estados de memoria
+    let pestañaActiva = 'demoras'; // 'demoras' | 'diesel'
+    let modalEquipoTarget = 'demoras'; // 'demoras' | 'diesel'
+
     let codigoActivo = CATALOGO[0].codigo;
-    let equipoActivo = CATALOGO_EQUIPOS[0].id;
+    let equipoActivoDemoras = CATALOGO_EQUIPOS[0].id;
     // Duración del turno en horas (se usa para avisar si las demoras suman más que el turno)
     const DURACION_TURNO_HORAS = 12;
+    // Debe coincidir con VERSION de sw.js
+    const APP_VERSION = 'v8';
+    const STORAGE_KEY_PESTANA = 'app_pestana_activa';
 
     let demorasTurno = [];
     let editandoId = null;        // id de la demora que se está editando (o null)
     let solapeConfirmado = false; // el usuario ya vio el aviso de empalme y quiere continuar
-    let historialReportes = [];
+    let historialReportesDemoras = [];
 
-    // Referencias DOM Cabecera
+    let equipoActivoDiesel = CATALOGO_EQUIPOS[0].id;
+    let despachosTurnoDiesel = [];
+    let historialReportesDiesel = [];
+    let recargasDiesel = [];              // recargas de la pipa durante el turno [{id, hora, litros}]
+    let editandoDespachoId = null;        // id del despacho que se está editando (o null)
+    let clInicialPrevio = '';             // C. Litros Inicial que había antes de empezar a editar
+    let saldoDieselConfirmado = false;    // ya vio el aviso de saldo y quiere continuar
+    let excesoDiesel = false;             // el despacho del formulario supera el saldo de la pipa
+
+    // --- REFERENCIAS DOM: PESTAÑAS Y HEADER ---
+    const tabBtnDemoras = document.getElementById('tabBtnDemoras');
+    const tabBtnDiesel = document.getElementById('tabBtnDiesel');
+    const vistaDemoras = document.getElementById('vistaDemoras');
+    const vistaDiesel = document.getElementById('vistaDiesel');
+    const headerIcono = document.getElementById('headerIcono');
+    const headerTitulo = document.getElementById('headerTitulo');
+    const headerSubtitulo = document.getElementById('headerSubtitulo');
+
+    // --- REFERENCIAS DOM: DEMORAS ---
     const inputNombre = document.getElementById('inputNombre');
     const inputEquipo = document.getElementById('inputEquipo');
     const selectTurno = document.getElementById('selectTurno');
     const inputDia = document.getElementById('inputDia');
-
-    // Referencias Horómetros
     const inputHorometroInicial = document.getElementById('inputHorometroInicial');
     const inputHorometroFinal = document.getElementById('inputHorometroFinal');
     const badgeHorasMotor = document.getElementById('badgeHorasMotor');
     const alertaErrorHorometro = document.getElementById('alertaErrorHorometro');
-
-    // Referencias Selector de Equipos
     const btnAbrirEquipos = document.getElementById('btnAbrirEquipos');
     const labelEquipoId = document.getElementById('labelEquipoId');
     const labelEquipoTipo = document.getElementById('labelEquipoTipo');
-    const modalEquipos = document.getElementById('modalEquipos');
-    const btnCerrarModalEquipos = document.getElementById('btnCerrarModalEquipos');
-    const listaOpcionesEquipos = document.getElementById('listaOpcionesEquipos');
-
-    // Referencias Demoras
     const inputHoraInicio = document.getElementById('inputHoraInicio');
     const inputHoraFin = document.getElementById('inputHoraFin');
     const inputComentario = document.getElementById('inputComentario');
     const duracionBadge = document.getElementById('duracionBadge');
-
     const btnAbrirCatalogo = document.getElementById('btnAbrirCatalogo');
     const labelCodigoActivo = document.getElementById('labelCodigoActivo');
     const labelDescActiva = document.getElementById('labelDescActiva');
-    const modalCatalogo = document.getElementById('modalCatalogo');
-    const btnCerrarModal = document.getElementById('btnCerrarModal');
-    const listaOpcionesCatalogo = document.getElementById('listaOpcionesCatalogo');
-
     const btnAgregarDemora = document.getElementById('btnAgregarDemora');
     const iconoBtnAgregar = document.getElementById('iconoBtnAgregar');
     const textoBtnAgregar = document.getElementById('textoBtnAgregar');
@@ -456,21 +694,68 @@
     const totalTiempoAcumulado = document.getElementById('totalTiempoAcumulado');
     const panelCierreTurno = document.getElementById('panelCierreTurno');
     const btnFinalizarTurno = document.getElementById('btnFinalizarTurno');
-
-    // Referencias Historial
     const contenedorHistorial = document.getElementById('contenedorHistorial');
     const contadorHistorial = document.getElementById('contadorHistorial');
     const mensajeHistorialVacio = document.getElementById('mensajeHistorialVacio');
 
-    // Referencias Modal CSV
+    // --- REFERENCIAS DOM: DIÉSEL ---
+    const inputDieselOperador = document.getElementById('inputDieselOperador');
+    const inputDieselPipaId = document.getElementById('inputDieselPipaId');
+    const selectDieselTurno = document.getElementById('selectDieselTurno');
+    const inputDieselDia = document.getElementById('inputDieselDia');
+    const inputDieselHIni = document.getElementById('inputDieselHIni');
+    const inputDieselHFin = document.getElementById('inputDieselHFin');
+    const badgeDieselHorasMotor = document.getElementById('badgeDieselHorasMotor');
+    const inputDieselLitrosIniciales = document.getElementById('inputDieselLitrosIniciales');
+        const selectDieselPertenencia = document.getElementById('selectDieselPertenencia');
+    const inputEquipoReceptorDiesel = document.getElementById('inputEquipoReceptorDiesel');
+    const sugerenciasEquiposDiesel = document.getElementById('sugerenciasEquiposDiesel');
+    const inputHoraCargaDiesel = document.getElementById('inputHoraCargaDiesel');
+    const inputCLInicial = document.getElementById('inputCLInicial');
+    const inputCLFinal = document.getElementById('inputCLFinal');
+    const badgeLitrosDespacho = document.getElementById('badgeLitrosDespacho');
+    const inputHorometroEquipoReceptor = document.getElementById('inputHorometroEquipoReceptor');
+    const inputNotaDiesel = document.getElementById('inputNotaDiesel');
+    const btnAgregarDespachoDiesel = document.getElementById('btnAgregarDespachoDiesel');
+    const iconoBtnDespacho = document.getElementById('iconoBtnDespacho');
+    const textoBtnDespacho = document.getElementById('textoBtnDespacho');
+    const btnCancelarEdicionDiesel = document.getElementById('btnCancelarEdicionDiesel');
+    const avisoSaldoDiesel = document.getElementById('avisoSaldoDiesel');
+    const avisoEquipoDiesel = document.getElementById('avisoEquipoDiesel');
+    const badgeTotalRecargas = document.getElementById('badgeTotalRecargas');
+    const inputRecargaLitros = document.getElementById('inputRecargaLitros');
+    const btnAgregarRecarga = document.getElementById('btnAgregarRecarga');
+    const listaRecargasDiesel = document.getElementById('listaRecargasDiesel');
+    const contadorDespachosDiesel = document.getElementById('contadorDespachosDiesel');
+    const totalLitrosDespachados = document.getElementById('totalLitrosDespachados');
+    const badgeDieselDisponible = document.getElementById('badgeDieselDisponible');
+    const badgeDieselSaldoFinal = document.getElementById('badgeDieselSaldoFinal');
+    const contenedorListaDiesel = document.getElementById('contenedorListaDiesel');
+    const mensajeListaDieselVacia = document.getElementById('mensajeListaDieselVacia');
+    const panelCierreTurnoDiesel = document.getElementById('panelCierreTurnoDiesel');
+    const btnFinalizarTurnoDiesel = document.getElementById('btnFinalizarTurnoDiesel');
+    const contenedorHistorialDiesel = document.getElementById('contenedorHistorialDiesel');
+    const contadorHistorialDiesel = document.getElementById('contadorHistorialDiesel');
+    const mensajeHistorialDieselVacio = document.getElementById('mensajeHistorialDieselVacio');
+
+    // --- REFERENCIAS DOM: MODALES ---
+    const modalCatalogo = document.getElementById('modalCatalogo');
+    const btnCerrarModal = document.getElementById('btnCerrarModal');
+    const listaOpcionesCatalogo = document.getElementById('listaOpcionesCatalogo');
+
+    const modalEquipos = document.getElementById('modalEquipos');
+    const btnCerrarModalEquipos = document.getElementById('btnCerrarModalEquipos');
+    const listaOpcionesEquipos = document.getElementById('listaOpcionesEquipos');
+    const subtituloModalEquipos = document.getElementById('subtituloModalEquipos');
+
     const modalCSV = document.getElementById('modalCSV');
     const btnCerrarCSV = document.getElementById('btnCerrarCSV');
     const codigoCSV = document.getElementById('codigoCSV');
     const btnDescargarDesdeModal = document.getElementById('btnDescargarDesdeModal');
+    const modalCSVHeader = document.getElementById('modalCSVHeader');
     let csvTemporal = { contenido: '', nombreArchivo: '' };
 
     // --- UTILIDADES ---
-
     function escaparHTML(texto) {
       return String(texto == null ? '' : texto)
         .replace(/&/g, '&amp;')
@@ -487,17 +772,77 @@
       return `${y}-${m}-${d}`;
     }
 
+    function formatHora(fecha) {
+      const h = String(fecha.getHours()).padStart(2, '0');
+      const m = String(fecha.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
     function guardarStorage(clave, valor) {
       try {
         localStorage.setItem(clave, JSON.stringify(valor));
       } catch (e) {
-        console.error('No se pudo guardar en el almacenamiento local', e);
+        console.error('Error guardando en almacenamiento local', e);
       }
     }
 
-    // --- CÁLCULO Y VALIDACIÓN DE HORÓMETROS ---
+    function csvTexto(valor) {
+      return `"${String(valor == null ? '' : valor).replace(/"/g, '""')}"`;
+    }
 
-    function calcularHorasMotor() {
+    function formatearFechaDMA(iso) {
+      const partes = String(iso || '').split('-');
+      if (partes.length !== 3) return iso || '';
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function abreviarTurno(turno) {
+      return /turno\s*1/i.test(turno || '') ? '1RA' : '2DA';
+    }
+
+    function descargarBlobCSV(contenido, nombreArchivo) {
+      const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', nombreArchivo);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // --- CONTROL DE PESTAÑAS (TABS) ---
+    function cambiarPestaña(nuevaPestaña) {
+      pestañaActiva = nuevaPestaña;
+      try { localStorage.setItem(STORAGE_KEY_PESTANA, nuevaPestaña); } catch (e) {}
+      if (nuevaPestaña === 'demoras') {
+        vistaDemoras.classList.remove('hidden');
+        vistaDiesel.classList.add('hidden');
+
+        tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm';
+        tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
+
+        headerIcono.textContent = '⏱';
+        headerIcono.className = 'w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base';
+        headerTitulo.textContent = 'Control Operativo';
+        headerSubtitulo.textContent = 'Camiones y Mantenimiento';
+      } else {
+        vistaDemoras.classList.add('hidden');
+        vistaDiesel.classList.remove('hidden');
+
+        tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow-sm';
+        tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
+
+        headerIcono.textContent = '⛽';
+        headerIcono.className = 'w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-base';
+        headerTitulo.textContent = 'Control de Diésel';
+        headerSubtitulo.textContent = 'Pipa y Despacho en Campo';
+      }
+    }
+
+    // --- CÁLCULOS: HORÓMETROS DEMORAS ---
+    function calcularHorasMotorDemoras() {
       const valIni = inputHorometroInicial.value.trim();
       const valFin = inputHorometroFinal.value.trim();
 
@@ -507,26 +852,17 @@
         alertaErrorHorometro.classList.add('hidden');
         return null;
       }
-
       if (valIni === '' || valFin === '') {
         badgeHorasMotor.textContent = 'Pendiente...';
         badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30';
         alertaErrorHorometro.classList.add('hidden');
         return null;
       }
-
       const hIni = parseFloat(valIni);
       const hFin = parseFloat(valFin);
-
-      if (isNaN(hIni) || isNaN(hFin)) {
-        badgeHorasMotor.textContent = 'Inválido';
-        badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-red-400 bg-slate-950 px-2 py-0.5 rounded border border-red-500/30';
-        alertaErrorHorometro.classList.add('hidden');
-        return null;
-      }
+      if (isNaN(hIni) || isNaN(hFin)) return null;
 
       const diff = hFin - hIni;
-
       if (diff < 0) {
         badgeHorasMotor.textContent = 'Error: Final < Inicial';
         badgeHorasMotor.className = 'text-[11px] font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-500/30';
@@ -539,40 +875,6 @@
         alertaErrorHorometro.classList.add('hidden');
         return delta;
       }
-    }
-
-    // --- INICIALIZACIÓN Y PERSISTENCIA ---
-
-    // Debe coincidir con VERSION de sw.js
-    const APP_VERSION = 'v6';
-
-    function init() {
-      document.getElementById('versionApp').textContent = APP_VERSION;
-      inputDia.value = fechaLocalISO(new Date());
-
-      const ahora = new Date();
-      inputHoraInicio.value = formatHora(ahora);
-      ahora.setMinutes(ahora.getMinutes() + 30);
-      inputHoraFin.value = formatHora(ahora);
-
-      actualizarCalculoDuracion();
-      renderizarCatalogoModal();
-      renderizarCatalogoEquiposModal();
-
-      const hayBorrador = restaurarBorrador();
-      if (!hayBorrador) {
-        seleccionarEquipo(CATALOGO_EQUIPOS[0].id, false);
-      }
-
-      calcularHorasMotor();
-      restaurarHistorial();
-      asignarEventos();
-    }
-
-    function formatHora(fecha) {
-      const h = String(fecha.getHours()).padStart(2, '0');
-      const m = String(fecha.getMinutes()).padStart(2, '0');
-      return `${h}:${m}`;
     }
 
     function calcularDiferenciaMinutos(inicio, fin) {
@@ -644,9 +946,150 @@
       btnCancelarEdicion.classList.toggle('hidden', !editando);
     }
 
-    // --- MANEJO DE BORRADOR LOCAL ---
+    // --- CÁLCULOS: DIÉSEL (PIPA Y FLUJÓMETRO) ---
+    function calcularHorasMotorPipa() {
+      const valIni = inputDieselHIni.value.trim();
+      const valFin = inputDieselHFin.value.trim();
+      if (!valIni || !valFin) {
+        badgeDieselHorasMotor.textContent = '0.0 hrs motor';
+        badgeDieselHorasMotor.className = 'text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+        return;
+      }
+      const hIni = parseFloat(valIni);
+      const hFin = parseFloat(valFin);
+      if (isNaN(hIni) || isNaN(hFin)) return;
+      const diff = hFin - hIni;
+      if (diff < 0) {
+        badgeDieselHorasMotor.textContent = 'Error: Fin < Inicio';
+        badgeDieselHorasMotor.className = 'text-[11px] font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-500/30';
+      } else {
+        badgeDieselHorasMotor.textContent = `${diff.toFixed(1)} hrs motor`;
+        badgeDieselHorasMotor.className = 'text-[11px] font-mono font-bold text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-500/30';
+      }
+    }
 
-    function autoGuardarBorrador() {
+    function calcularLitrosDespachoActual() {
+      const valIni = inputCLInicial.value.trim();
+      const valFin = inputCLFinal.value.trim();
+      if (!valIni || !valFin) {
+        badgeLitrosDespacho.textContent = '0.0 Lts';
+        badgeLitrosDespacho.className = 'text-[11px] font-mono font-bold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 rounded';
+        return 0;
+      }
+      const lIni = parseFloat(valIni);
+      const lFin = parseFloat(valFin);
+      if (isNaN(lIni) || isNaN(lFin)) return 0;
+
+      const diff = lFin - lIni;
+      if (diff < 0) {
+        badgeLitrosDespacho.textContent = 'Error: Final < Inicial';
+        badgeLitrosDespacho.className = 'text-[11px] font-mono font-bold text-red-400 bg-red-950/60 border border-red-500/30 px-2 py-0.5 rounded';
+        return 0;
+      } else {
+        const lts = diff.toFixed(1);
+        badgeLitrosDespacho.textContent = `${lts} Lts`;
+        badgeLitrosDespacho.className = 'text-[11px] font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded';
+        return parseFloat(lts);
+      }
+    }
+
+    function actualizarBalanceDiesel() {
+      const ltsIniPipa = parseFloat(inputDieselLitrosIniciales.value) || 0;
+      const capacidadTotal = ltsIniPipa + totalRecargasDiesel();
+
+      const totalDespachado = despachosTurnoDiesel.reduce((acc, curr) => acc + curr.litros, 0);
+      const saldoFinal = capacidadTotal - totalDespachado;
+
+      totalLitrosDespachados.textContent = `Total: ${totalDespachado.toFixed(1)} L`;
+      badgeDieselDisponible.textContent = `${capacidadTotal.toLocaleString('es-MX')} L`;
+
+      badgeDieselSaldoFinal.textContent = `${saldoFinal.toLocaleString('es-MX', { maximumFractionDigits: 1 })} L`;
+      if (saldoFinal < 0) {
+        badgeDieselSaldoFinal.className = 'font-mono font-bold text-red-400';
+      } else {
+        badgeDieselSaldoFinal.className = 'font-mono font-bold text-emerald-400';
+      }
+      actualizarAvisoSaldoDiesel();
+    }
+
+    function totalRecargasDiesel() {
+      return recargasDiesel.reduce((acc, r) => acc + r.litros, 0);
+    }
+
+    // (1) Saldo disponible vs. litros del despacho que se está capturando
+    function evaluarSaldoDiesel() {
+      const ini = parseFloat(inputCLInicial.value);
+      const fin = parseFloat(inputCLFinal.value);
+      const lts = (Number.isFinite(ini) && Number.isFinite(fin) && fin > ini) ? (fin - ini) : 0;
+      const capacidad = (parseFloat(inputDieselLitrosIniciales.value) || 0) + totalRecargasDiesel();
+      const yaDespachado = despachosTurnoDiesel
+        .filter(d => d.id !== editandoDespachoId)
+        .reduce((acc, d) => acc + d.litros, 0);
+      const saldo = capacidad - yaDespachado;
+      return {
+        lts, capacidad, saldo,
+        exceso: lts > 0 && capacidad > 0 && lts > saldo + 0.05,
+        sinInventario: lts > 0 && capacidad <= 0
+      };
+    }
+
+    function actualizarAvisoSaldoDiesel() {
+      const e = evaluarSaldoDiesel();
+      excesoDiesel = e.exceso;
+      if (!e.exceso) saldoDieselConfirmado = false;
+      if (e.exceso) {
+        avisoSaldoDiesel.textContent = `⚠️ Este despacho (${e.lts.toFixed(1)} L) supera el saldo de la pipa (${Math.max(e.saldo, 0).toFixed(1)} L). Revisa el cuenta-litros o toca otra vez para registrar de todos modos.`;
+        avisoSaldoDiesel.className = 'text-[11px] font-medium rounded-xl px-3 py-2 text-amber-300 bg-amber-500/10 border border-amber-500/30';
+      } else if (e.sinInventario) {
+        avisoSaldoDiesel.textContent = 'ℹ️ Captura el diésel inicial de la pipa para controlar el saldo.';
+        avisoSaldoDiesel.className = 'text-[11px] font-medium rounded-xl px-3 py-2 text-sky-300 bg-sky-500/10 border border-sky-500/30';
+      } else {
+        avisoSaldoDiesel.className = 'hidden';
+      }
+      actualizarTextoBotonDiesel();
+    }
+
+    function actualizarTextoBotonDiesel() {
+      const editando = editandoDespachoId !== null;
+      const confirmando = saldoDieselConfirmado && excesoDiesel;
+      iconoBtnDespacho.textContent = confirmando ? '⚠️' : (editando ? '💾' : '➕');
+      textoBtnDespacho.textContent = confirmando
+        ? 'Registrar de todos modos'
+        : (editando ? 'Guardar cambios' : 'Registrar Carga de Diésel');
+      btnCancelarEdicionDiesel.classList.toggle('hidden', !editando);
+    }
+
+    // (3) Equipo receptor: reconocer el equipo aunque lo escriban distinto ("cv173", "CV 173")
+    function resolverEquipoDiesel(texto) {
+      const limpio = texto.trim().replace(/\s+/g, ' ').toUpperCase();
+      const clave = limpio.replace(/[^A-Z0-9]/g, '');
+      const eq = clave ? CATALOGO_EQUIPOS.find(e => e.id.toUpperCase().replace(/[^A-Z0-9]/g, '') === clave) : null;
+      return { nombre: eq ? eq.id : limpio, catalogo: eq || null };
+    }
+
+    function actualizarAvisoEquipoDiesel() {
+      const texto = inputEquipoReceptorDiesel.value;
+      if (!texto.trim()) { avisoEquipoDiesel.className = 'hidden'; return; }
+      const r = resolverEquipoDiesel(texto);
+      if (r.catalogo) {
+        avisoEquipoDiesel.textContent = `✓ ${r.catalogo.id} · ${r.catalogo.tipo}`;
+        avisoEquipoDiesel.className = 'text-[11px] font-medium rounded-lg px-2.5 py-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/30';
+      } else {
+        avisoEquipoDiesel.textContent = `No está en la lista de equipos: se guardará como "${r.nombre}".`;
+        avisoEquipoDiesel.className = 'text-[11px] font-medium rounded-lg px-2.5 py-1.5 text-amber-300 bg-amber-500/10 border border-amber-500/30';
+      }
+    }
+
+    // Se llama cada vez que cambian los datos del despacho en captura
+    function refrescarFormularioDiesel() {
+      saldoDieselConfirmado = false;
+      calcularLitrosDespachoActual();
+      actualizarAvisoSaldoDiesel();
+      actualizarAvisoEquipoDiesel();
+    }
+
+    // --- PERSISTENCIA Y BORRADORES ---
+    function autoGuardarBorradorDemoras() {
       const borrador = {
         nombre: inputNombre.value,
         equipo: inputEquipo.value,
@@ -656,62 +1099,80 @@
         horometroFinal: inputHorometroFinal.value,
         demoras: demorasTurno
       };
-      guardarStorage(STORAGE_KEY_BORRADOR, borrador);
+      guardarStorage(STORAGE_KEY_BORRADOR_DEMORAS, borrador);
     }
 
-    function restaurarBorrador() {
+    function restaurarBorradorDemoras() {
       let data = null;
-      try {
-        data = localStorage.getItem(STORAGE_KEY_BORRADOR);
-      } catch (e) {
-        return false;
-      }
+      try { data = localStorage.getItem(STORAGE_KEY_BORRADOR_DEMORAS); } catch(e) { return false; }
       if (!data) return false;
       try {
-        const borrador = JSON.parse(data);
-        if (borrador.nombre) inputNombre.value = borrador.nombre;
-        seleccionarEquipo(borrador.equipo || CATALOGO_EQUIPOS[0].id, false);
-        if (borrador.turno) selectTurno.value = borrador.turno;
-        if (borrador.dia) inputDia.value = borrador.dia;
-        if (borrador.horometroInicial != null) inputHorometroInicial.value = borrador.horometroInicial;
-        if (borrador.horometroFinal != null) inputHorometroFinal.value = borrador.horometroFinal;
-        if (Array.isArray(borrador.demoras)) {
-          demorasTurno = borrador.demoras;
+        const b = JSON.parse(data);
+        if (b.nombre) inputNombre.value = b.nombre;
+        seleccionarEquipo(b.equipo || CATALOGO_EQUIPOS[0].id, false);
+        if (b.turno) selectTurno.value = b.turno;
+        if (b.dia) inputDia.value = b.dia;
+        if (b.horometroInicial != null) inputHorometroInicial.value = b.horometroInicial;
+        if (b.horometroFinal != null) inputHorometroFinal.value = b.horometroFinal;
+        if (Array.isArray(b.demoras)) {
+          demorasTurno = b.demoras;
           renderizarListaDemoras();
         }
         return true;
-      } catch (e) {
-        console.error('Error restaurando borrador', e);
-        return false;
-      }
+      } catch (e) { return false; }
     }
 
-    // --- HISTORIAL PERSISTENTE ---
-
-    function guardarHistorialEnStorage() {
-      guardarStorage(STORAGE_KEY_HISTORIAL, historialReportes);
-      renderizarHistorial();
+    function autoGuardarBorradorDiesel() {
+      const borrador = {
+        operador: inputDieselOperador.value,
+        pipaId: inputDieselPipaId.value,
+        turno: selectDieselTurno.value,
+        dia: inputDieselDia.value,
+        hIni: inputDieselHIni.value,
+        hFin: inputDieselHFin.value,
+        ltsIniciales: inputDieselLitrosIniciales.value,
+        recargas: recargasDiesel,
+        pertenencia: selectDieselPertenencia.value,
+        // si hay una edición abierta, se guardan los valores previos, no los del despacho que se edita
+        equipoReceptor: editandoDespachoId !== null ? '' : inputEquipoReceptorDiesel.value,
+        clInicial: editandoDespachoId !== null ? clInicialPrevio : inputCLInicial.value,
+        despachos: despachosTurnoDiesel
+      };
+      guardarStorage(STORAGE_KEY_BORRADOR_DIESEL, borrador);
     }
 
-    function restaurarHistorial() {
+    function restaurarBorradorDiesel() {
       let data = null;
+      try { data = localStorage.getItem(STORAGE_KEY_BORRADOR_DIESEL); } catch(e) { return false; }
+      if (!data) return false;
       try {
-        data = localStorage.getItem(STORAGE_KEY_HISTORIAL);
-      } catch (e) {
-        data = null;
-      }
-      if (data) {
-        try {
-          historialReportes = JSON.parse(data) || [];
-        } catch (e) {
-          historialReportes = [];
+        const b = JSON.parse(data);
+        if (b.operador) inputDieselOperador.value = b.operador;
+        if (b.pipaId) inputDieselPipaId.value = b.pipaId;
+        if (b.turno) selectDieselTurno.value = b.turno;
+        if (b.dia) inputDieselDia.value = b.dia;
+        if (b.hIni != null) inputDieselHIni.value = b.hIni;
+        if (b.hFin != null) inputDieselHFin.value = b.hFin;
+        if (b.ltsIniciales != null) inputDieselLitrosIniciales.value = b.ltsIniciales;
+        if (Array.isArray(b.recargas)) {
+          recargasDiesel = b.recargas.filter(r => r && r.litros > 0);
+        } else if (parseFloat(b.ltsRecibidos) > 0) {
+          // borrador de la versión anterior (un solo campo de diésel cargado)
+          recargasDiesel = [{ id: 'previa', hora: '', litros: parseFloat(b.ltsRecibidos) }];
         }
-      }
-      renderizarHistorial();
+        renderizarRecargasDiesel();
+        if (b.pertenencia) selectDieselPertenencia.value = b.pertenencia;
+        if (b.equipoReceptor) inputEquipoReceptorDiesel.value = b.equipoReceptor;
+        if (b.clInicial != null) inputCLInicial.value = b.clInicial;
+        if (Array.isArray(b.despachos)) {
+          despachosTurnoDiesel = b.despachos;
+          renderizarListaDiesel();
+        }
+        return true;
+      } catch (e) { return false; }
     }
 
-    // --- RENDERIZADO UI ---
-
+    // --- RENDERIZADO MODALES CATÁLOGOS ---
     function renderizarCatalogoModal() {
       listaOpcionesCatalogo.innerHTML = '';
       CATALOGO.forEach(item => {
@@ -735,6 +1196,7 @@
     function seleccionarCodigo(codigo) {
       codigoActivo = codigo;
       const cat = CATALOGO.find(c => c.codigo === codigo);
+      if (!cat) return;
       labelCodigoActivo.textContent = cat.codigo;
       labelDescActiva.textContent = cat.desc;
       modalCatalogo.classList.add('hidden');
@@ -742,37 +1204,47 @@
 
     function renderizarCatalogoEquiposModal() {
       listaOpcionesEquipos.innerHTML = '';
+      if (sugerenciasEquiposDiesel) sugerenciasEquiposDiesel.innerHTML = '';
+
       CATALOGO_EQUIPOS.forEach(eq => {
+        // Modal para pestaña Demoras
         const div = document.createElement('div');
-        div.className = 'p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:border-amber-500/50 hover:bg-slate-800 transition-colors';
+        div.className = 'p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between cursor-pointer hover:border-slate-600 hover:bg-slate-800 transition-colors';
         div.onclick = () => seleccionarEquipo(eq.id);
         div.innerHTML = `
           <div>
-            <span class="font-bold text-amber-400 text-xs font-mono">${eq.id}</span>
-            <p class="text-xs text-slate-200 mt-0.5">${eq.tipo}</p>
+            <span class="font-bold text-white text-xs font-mono">${eq.id}</span>
+            <p class="text-xs text-slate-400 mt-0.5">${eq.tipo}</p>
           </div>
           <span class="text-slate-500 text-xs">Elegir →</span>
         `;
         listaOpcionesEquipos.appendChild(div);
+
+        // Opciones en datalist como sugerencia rápida en Diésel
+        if (sugerenciasEquiposDiesel) {
+          const opt = document.createElement('option');
+          opt.value = eq.id;
+          opt.label = `${eq.id} (${eq.tipo})`;
+          sugerenciasEquiposDiesel.appendChild(opt);
+        }
       });
     }
 
     function seleccionarEquipo(id, guardar = true) {
       const eq = CATALOGO_EQUIPOS.find(e => e.id === id) || CATALOGO_EQUIPOS[0];
-      equipoActivo = eq.id;
+      equipoActivoDemoras = eq.id;
       inputEquipo.value = eq.id;
       labelEquipoId.textContent = eq.id;
       labelEquipoTipo.textContent = eq.tipo;
       modalEquipos.classList.add('hidden');
-      if (guardar) autoGuardarBorrador();
+      if (guardar) autoGuardarBorradorDemoras();
     }
 
+    // --- RENDERIZADO LISTAS: DEMORAS ---
     function renderizarListaDemoras() {
       contadorDemoras.textContent = demorasTurno.length;
-
       const totalMin = demorasTurno.reduce((acc, curr) => acc + curr.duracionMin, 0);
-      const horasTotales = (totalMin / 60).toFixed(2);
-      totalTiempoAcumulado.textContent = `Total: ${totalMin} min (${horasTotales} hrs)`;
+      totalTiempoAcumulado.textContent = `Total: ${totalMin} min (${(totalMin / 60).toFixed(2)} hrs)`;
 
       const excede = totalMin > DURACION_TURNO_HORAS * 60;
       totalTiempoAcumulado.className = 'text-xs font-bold ' + (excede ? 'text-red-400' : 'text-amber-400');
@@ -787,7 +1259,6 @@
         panelCierreTurno.classList.add('hidden');
         return;
       }
-
       mensajeListaVacia.classList.add('hidden');
       panelCierreTurno.classList.remove('hidden');
 
@@ -815,29 +1286,26 @@
       });
     }
 
-    function renderizarHistorial() {
-      contadorHistorial.textContent = historialReportes.length;
-
+    function renderizarHistorialDemoras() {
+      contadorHistorial.textContent = historialReportesDemoras.length;
       const cards = contenedorHistorial.querySelectorAll('.card-historial');
       cards.forEach(c => c.remove());
 
-      if (historialReportes.length === 0) {
+      if (historialReportesDemoras.length === 0) {
         mensajeHistorialVacio.classList.remove('hidden');
         return;
       }
-
       mensajeHistorialVacio.classList.add('hidden');
 
-      historialReportes.forEach((rep, idx) => {
+      historialReportesDemoras.forEach((rep, idx) => {
         const totalMin = rep.demoras.reduce((a, b) => a + b.duracionMin, 0);
         const tieneHorometros = rep.horometroInicial && rep.horometroFinal;
-
         const card = document.createElement('div');
         card.className = 'card-historial bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5';
         card.innerHTML = `
           <div class="flex items-start justify-between">
             <div class="space-y-0.5">
-              <p class="text-xs font-bold text-white">${escaparHTML(rep.equipo || 'Equipo Sin Nombre')}</p>
+              <p class="text-xs font-bold text-white">${escaparHTML(rep.equipo || 'Equipo')}</p>
               <p class="text-[11px] text-slate-400">${escaparHTML(rep.dia)} • ${escaparHTML(rep.turno)} • ${escaparHTML(rep.nombre || 'Operador N/A')}</p>
               ${tieneHorometros ? `
                 <p class="text-[10px] text-amber-300 font-mono flex items-center gap-1 pt-0.5">
@@ -849,29 +1317,20 @@
               ${(totalMin / 60).toFixed(1)} hrs
             </span>
           </div>
-
           <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
-            <!-- Botón WhatsApp -->
-            <button onclick="enviarReporteWhatsApp(${idx})"
-              class="flex-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm transition-all">
+            <button onclick="enviarReporteDemoraWhatsApp(${idx})"
+              class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm">
               <span>💬</span> WhatsApp
             </button>
-
-            <!-- Botón Ver CSV -->
-            <button onclick="mostrarCSVModal(${idx})"
+            <button onclick="mostrarCSVDemoraModal(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
               Ver CSV
             </button>
-
-            <!-- Botón Descargar -->
-            <button onclick="descargarCSV(${idx})"
-              class="bg-slate-800 hover:bg-slate-700 text-amber-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar archivo">
+            <button onclick="descargarCSVDemora(${idx})"
+              class="bg-slate-800 hover:bg-slate-700 text-amber-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar">
               ⬇
             </button>
-
-            <!-- Botón Borrar -->
-            <button onclick="eliminarReporteHistorial(${idx})"
-              class="text-slate-600 hover:text-red-400 p-2 text-xs">
+            <button onclick="eliminarReporteDemoraHistorial(${idx})" class="text-slate-600 hover:text-red-400 p-2 text-xs">
               🗑
             </button>
           </div>
@@ -880,14 +1339,119 @@
       });
     }
 
-    // --- ACCIONES DE FORMULARIO ---
+    // --- RENDERIZADO LISTAS: DIÉSEL ---
+    function renderizarListaDiesel() {
+      contadorDespachosDiesel.textContent = despachosTurnoDiesel.length;
+      actualizarBalanceDiesel();
 
+      const items = contenedorListaDiesel.querySelectorAll('.item-despacho-diesel');
+      items.forEach(el => el.remove());
+
+      if (despachosTurnoDiesel.length === 0) {
+        mensajeListaDieselVacia.classList.remove('hidden');
+        panelCierreTurnoDiesel.classList.add('hidden');
+        return;
+      }
+      mensajeListaDieselVacia.classList.add('hidden');
+      panelCierreTurnoDiesel.classList.remove('hidden');
+
+      despachosTurnoDiesel.forEach((item, index) => {
+        const esMafer = (item.pertenencia || 'Mafer') === 'Mafer';
+        const badgeColor = esMafer
+          ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+          : 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+
+        const div = document.createElement('div');
+        const enEdicion = item.id === editandoDespachoId;
+        div.className = 'item-despacho-diesel bg-slate-950/90 border rounded-xl p-3 flex items-start justify-between gap-2 ' + (enEdicion ? 'border-sky-500' : 'border-slate-800');
+        div.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs font-bold text-white font-mono">${escaparHTML(item.equipo)}</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${escaparHTML(item.pertenencia || 'Mafer')}</span>
+                <span class="text-[10px] text-slate-400">${escaparHTML(item.hora)}</span>
+              </div>
+              <span class="text-xs font-bold font-mono text-emerald-400">${item.litros.toFixed(1)} L</span>
+            </div>
+            <p class="text-[11px] text-slate-300 mt-1 font-mono">
+              CL: ${escaparHTML(item.clInicial)} ➔ ${escaparHTML(item.clFinal)}
+              ${item.horometroEquipo ? `<span class="text-slate-400 ml-1.5">(H: ${escaparHTML(item.horometroEquipo)})</span>` : ''}
+            </p>
+            ${item.nota ? `<p class="text-[10px] text-slate-400 italic mt-0.5">"${escaparHTML(item.nota)}"</p>` : ''}
+          </div>
+          <div class="flex items-center shrink-0">
+            <button onclick="editarDespachoDiesel(${index})" aria-label="Editar despacho" class="text-slate-500 hover:text-sky-400 p-1.5 text-sm">✏️</button>
+            <button onclick="eliminarDespachoDiesel(${index})" aria-label="Eliminar despacho" class="text-slate-500 hover:text-red-400 p-1.5 text-sm font-bold">✕</button>
+          </div>
+        `;
+        contenedorListaDiesel.appendChild(div);
+      });
+    }
+
+    function renderizarHistorialDiesel() {
+      contadorHistorialDiesel.textContent = historialReportesDiesel.length;
+      const cards = contenedorHistorialDiesel.querySelectorAll('.card-historial-diesel');
+      cards.forEach(c => c.remove());
+
+      if (historialReportesDiesel.length === 0) {
+        mensajeHistorialDieselVacio.classList.remove('hidden');
+        return;
+      }
+      mensajeHistorialDieselVacio.classList.add('hidden');
+
+      historialReportesDiesel.forEach((rep, idx) => {
+        const totalLts = rep.despachos.reduce((a, b) => a + b.litros, 0);
+        const ltsMafer = rep.despachos.filter(d => (d.pertenencia || 'Mafer') === 'Mafer').reduce((a, b) => a + b.litros, 0);
+        const ltsEmpresa = rep.despachos.filter(d => d.pertenencia === 'Empresa').reduce((a, b) => a + b.litros, 0);
+
+        const card = document.createElement('div');
+        card.className = 'card-historial-diesel bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5';
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div class="space-y-0.5">
+              <p class="text-xs font-bold text-sky-400">${escaparHTML(rep.pipaId || 'PIPA')} • ${escaparHTML(rep.dia)}</p>
+              <p class="text-[11px] text-slate-400">${escaparHTML(rep.turno)} • Op: ${escaparHTML(rep.operador || 'N/A')}</p>
+              <p class="text-[10px] text-slate-300 font-mono pt-0.5">
+                Total: <span class="text-emerald-400 font-bold">${totalLts.toFixed(1)} L</span> (${rep.despachos.length} cargas)
+              </p>
+              <p class="text-[9px] text-slate-400 font-mono">
+                Mafer: <span class="text-amber-300 font-semibold">${ltsMafer.toFixed(1)} L</span> | Empresa: <span class="text-purple-300 font-semibold">${ltsEmpresa.toFixed(1)} L</span>
+              </p>
+            </div>
+            <span class="text-[11px] font-mono font-bold text-sky-300 bg-sky-950/60 border border-sky-500/30 px-2 py-0.5 rounded">
+              ${escaparHTML(rep.horasMotorPipa || '0.0')} hrs pipa
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
+            <button onclick="enviarReporteDieselWhatsApp(${idx})"
+              class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm">
+              <span>💬</span> WhatsApp
+            </button>
+            <button onclick="mostrarCSVDieselModal(${idx})"
+              class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
+              Ver CSV
+            </button>
+            <button onclick="descargarCSVDiesel(${idx})"
+              class="bg-slate-800 hover:bg-slate-700 text-sky-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar">
+              ⬇
+            </button>
+            <button onclick="eliminarReporteDieselHistorial(${idx})" class="text-slate-600 hover:text-red-400 p-2 text-xs">
+              🗑
+            </button>
+          </div>
+        `;
+        contenedorHistorialDiesel.appendChild(card);
+      });
+    }
+
+    // --- ACCIONES Y REGISTROS: DEMORAS ---
     window.eliminarDemora = function(index) {
       const estabaEditando = demorasTurno[index] && demorasTurno[index].id === editandoId;
       demorasTurno.splice(index, 1);
       if (estabaEditando) terminarEdicion();
       renderizarListaDemoras();
-      autoGuardarBorrador();
+      autoGuardarBorradorDemoras();
       actualizarAvisoDemora();
     };
 
@@ -918,17 +1482,17 @@
       actualizarCalculoDuracion();
     }
 
-    window.eliminarReporteHistorial = function(index) {
-      if (confirm('¿Eliminar este reporte archivado?')) {
-        historialReportes.splice(index, 1);
-        guardarHistorialEnStorage();
+    window.eliminarReporteDemoraHistorial = function(index) {
+      if (confirm('¿Eliminar este reporte archivado de demoras?')) {
+        historialReportesDemoras.splice(index, 1);
+        guardarStorage(STORAGE_KEY_HISTORIAL_DEMORAS, historialReportesDemoras);
+        renderizarHistorialDemoras();
       }
     };
 
     function agregarDemora() {
       const inicio = inputHoraInicio.value;
       const fin = inputHoraFin.value;
-
       if (!inicio || !fin) {
         alert('Por favor ingresa la hora de inicio y fin.');
         return;
@@ -959,20 +1523,20 @@
       };
 
       if (editandoId !== null) {
-        const i = demorasTurno.findIndex(d => d.id === editandoId);
-        if (i >= 0) demorasTurno[i] = { ...demorasTurno[i], ...datos };
+        const idx = demorasTurno.findIndex(d => d.id === editandoId);
+        if (idx >= 0) demorasTurno[idx] = { ...demorasTurno[idx], ...datos };
         editandoId = null;
         solapeConfirmado = false;
         inputComentario.value = '';
         renderizarListaDemoras();
-        autoGuardarBorrador();
+        autoGuardarBorradorDemoras();
         terminarEdicion();
         return;
       }
 
       demorasTurno.push({ id: Date.now().toString(), ...datos });
       renderizarListaDemoras();
-      autoGuardarBorrador();
+      autoGuardarBorradorDemoras();
 
       // La hora final pasa a ser la inicial de la siguiente demora
       inputComentario.value = '';
@@ -981,13 +1545,11 @@
       actualizarCalculoDuracion();
     }
 
-    function finalizarTurno() {
+    function finalizarTurnoDemoras() {
       if (demorasTurno.length === 0) {
         alert('No hay demoras agregadas para cerrar el reporte.');
         return;
       }
-
-      // Validación de horómetros
       const valIni = inputHorometroInicial.value.trim();
       const valFin = inputHorometroFinal.value.trim();
       let deltaHoras = '';
@@ -995,10 +1557,9 @@
       if (valIni !== '' && valFin !== '') {
         const hIni = parseFloat(valIni);
         const hFin = parseFloat(valFin);
-
         if (!isNaN(hIni) && !isNaN(hFin)) {
           if (hFin < hIni) {
-            alert('El horómetro final no puede ser menor que el inicial. Por favor revisa las lecturas antes de archivar el turno.');
+            alert('El horómetro final no puede ser menor que el inicial. Corrige antes de archivar.');
             inputHorometroFinal.focus();
             return;
           }
@@ -1019,25 +1580,239 @@
         demoras: [...demorasTurno]
       };
 
-      historialReportes.unshift(nuevoReporte);
-      guardarHistorialEnStorage();
+      historialReportesDemoras.unshift(nuevoReporte);
+      guardarStorage(STORAGE_KEY_HISTORIAL_DEMORAS, historialReportesDemoras);
+      renderizarHistorialDemoras();
 
-      // Limpiar turno actual
       demorasTurno = [];
       editandoId = null;
       inputHorometroInicial.value = '';
       inputHorometroFinal.value = '';
-      calcularHorasMotor();
+      calcularHorasMotorDemoras();
       renderizarListaDemoras();
-      autoGuardarBorrador();
+      autoGuardarBorradorDemoras();
       actualizarCalculoDuracion();
 
-      alert('¡Turno finalizado y archivado con éxito en el teléfono!');
+      alert('¡Turno de Acarreo / Mantenimiento archivado con éxito!');
     }
 
-    // --- GENERADOR CSV CON HORÓMETROS (UTF-8 CON BOM) ---
+    // --- ACCIONES Y REGISTROS: DIÉSEL ---
+    window.eliminarDespachoDiesel = function(index) {
+      const quitado = despachosTurnoDiesel[index];
+      if (quitado && quitado.id === editandoDespachoId) terminarEdicionDiesel();
+      despachosTurnoDiesel.splice(index, 1);
+      renderizarListaDiesel();
+      autoGuardarBorradorDiesel();
+    };
 
-    function construirContenidoCSV(reporte) {
+    // (5) Editar un despacho ya registrado
+    window.editarDespachoDiesel = function(index) {
+      const d = despachosTurnoDiesel[index];
+      if (!d) return;
+      if (editandoDespachoId === null) clInicialPrevio = inputCLInicial.value;
+      editandoDespachoId = d.id;
+      selectDieselPertenencia.value = d.pertenencia || 'Mafer';
+      inputEquipoReceptorDiesel.value = d.equipo;
+      inputHoraCargaDiesel.value = d.hora;
+      inputCLInicial.value = d.clInicial;
+      inputCLFinal.value = d.clFinal;
+      inputHorometroEquipoReceptor.value = d.horometroEquipo || '';
+      inputNotaDiesel.value = d.nota || '';
+      refrescarFormularioDiesel();
+      renderizarListaDiesel();
+      autoGuardarBorradorDiesel();
+      inputEquipoReceptorDiesel.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+
+    // Sale del modo edición y deja el formulario listo para el siguiente despacho
+    function terminarEdicionDiesel() {
+      editandoDespachoId = null;
+      inputCLInicial.value = clInicialPrevio;
+      inputCLFinal.value = '';
+      inputEquipoReceptorDiesel.value = '';
+      inputHorometroEquipoReceptor.value = '';
+      inputNotaDiesel.value = '';
+      inputHoraCargaDiesel.value = formatHora(new Date());
+      refrescarFormularioDiesel();
+    }
+
+    // (6) Recargas de la pipa
+    function renderizarRecargasDiesel() {
+      badgeTotalRecargas.textContent = `+${totalRecargasDiesel().toLocaleString('es-MX', { maximumFractionDigits: 1 })} L`;
+      listaRecargasDiesel.innerHTML = '';
+      recargasDiesel.forEach(r => {
+        const chip = document.createElement('span');
+        chip.className = 'recarga-diesel inline-flex items-center gap-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono rounded-lg pl-2 pr-0.5 py-0.5';
+        chip.innerHTML = `${r.hora ? escaparHTML(r.hora) + ' ' : ''}+${r.litros.toLocaleString('es-MX', { maximumFractionDigits: 1 })} L
+          <button onclick="eliminarRecargaDiesel('${escaparHTML(String(r.id))}')" aria-label="Quitar recarga" class="text-slate-500 hover:text-red-400 px-1.5 py-0.5">✕</button>`;
+        listaRecargasDiesel.appendChild(chip);
+      });
+      actualizarBalanceDiesel();
+    }
+
+    function agregarRecargaDiesel() {
+      const lts = parseFloat(inputRecargaLitros.value);
+      if (!(lts > 0)) {
+        alert('Ingresa los litros de la recarga.');
+        inputRecargaLitros.focus();
+        return;
+      }
+      recargasDiesel.push({ id: Date.now().toString(), hora: formatHora(new Date()), litros: lts });
+      inputRecargaLitros.value = '';
+      renderizarRecargasDiesel();
+      autoGuardarBorradorDiesel();
+    }
+
+    window.eliminarRecargaDiesel = function(id) {
+      if (!confirm('¿Quitar esta recarga de la pipa?')) return;
+      recargasDiesel = recargasDiesel.filter(r => String(r.id) !== String(id));
+      renderizarRecargasDiesel();
+      autoGuardarBorradorDiesel();
+    };
+
+    window.eliminarReporteDieselHistorial = function(index) {
+      if (confirm('¿Eliminar este reporte archivado de pipa diésel?')) {
+        historialReportesDiesel.splice(index, 1);
+        guardarStorage(STORAGE_KEY_HISTORIAL_DIESEL, historialReportesDiesel);
+        renderizarHistorialDiesel();
+      }
+    };
+
+    function agregarDespachoDiesel() {
+      const hora = inputHoraCargaDiesel.value;
+      const clIniStr = inputCLInicial.value.trim();
+      const clFinStr = inputCLFinal.value.trim();
+      const equipoNombre = resolverEquipoDiesel(inputEquipoReceptorDiesel.value).nombre;
+      const pertenencia = selectDieselPertenencia.value;
+
+      if (!equipoNombre) {
+        alert('Por favor introduce el nombre o código del equipo receptor.');
+        inputEquipoReceptorDiesel.focus();
+        return;
+      }
+      if (!hora) {
+        alert('Por favor introduce la hora del despacho.');
+        return;
+      }
+      if (!clIniStr || !clFinStr) {
+        alert('Ingresa el cuenta-litros inicial y final.');
+        return;
+      }
+
+      const clIni = parseFloat(clIniStr);
+      const clFin = parseFloat(clFinStr);
+
+      if (isNaN(clIni) || isNaN(clFin) || clFin < clIni) {
+        alert('Lectura inválida: El cuenta-litros final no puede ser menor que el inicial.');
+        return;
+      }
+
+      const litrosSurtidos = parseFloat((clFin - clIni).toFixed(1));
+
+      // (1) Supera el saldo de la pipa: el primer toque avisa, el segundo confirma
+      if (evaluarSaldoDiesel().exceso && !saldoDieselConfirmado) {
+        saldoDieselConfirmado = true;
+        actualizarTextoBotonDiesel();
+        return;
+      }
+
+      const nuevoDespacho = {
+        id: editandoDespachoId !== null ? editandoDespachoId : Date.now().toString(),
+        hora: hora,
+        pertenencia: pertenencia,
+        equipo: equipoNombre,
+        clInicial: clIni,
+        clFinal: clFin,
+        litros: litrosSurtidos,
+        horometroEquipo: inputHorometroEquipoReceptor.value.trim(),
+        nota: inputNotaDiesel.value.trim()
+      };
+
+      if (editandoDespachoId !== null) {
+        const idx = despachosTurnoDiesel.findIndex(d => d.id === editandoDespachoId);
+        if (idx >= 0) despachosTurnoDiesel[idx] = nuevoDespacho;
+        // si se editó el último despacho, el siguiente arranca donde terminó éste
+        if (idx === despachosTurnoDiesel.length - 1) clInicialPrevio = String(clFin);
+        terminarEdicionDiesel();
+        renderizarListaDiesel();
+        autoGuardarBorradorDiesel();
+        return;
+      }
+
+      despachosTurnoDiesel.push(nuevoDespacho);
+      renderizarListaDiesel();
+
+      // Limpiar campos y preparar para el próximo despacho
+      inputCLInicial.value = clFin;
+      inputCLFinal.value = '';
+      inputEquipoReceptorDiesel.value = '';
+      inputHorometroEquipoReceptor.value = '';
+      inputNotaDiesel.value = '';
+      inputHoraCargaDiesel.value = formatHora(new Date()); // la hora del siguiente despacho arranca en "ahora"
+      refrescarFormularioDiesel();
+      autoGuardarBorradorDiesel();
+    }
+
+    function finalizarTurnoDiesel() {
+      if (despachosTurnoDiesel.length === 0) {
+        alert('No hay despachos registrados para cerrar el turno de pipa.');
+        return;
+      }
+
+      if (editandoDespachoId !== null) terminarEdicionDiesel();
+
+      const hIniPipa = parseFloat(inputDieselHIni.value) || 0;
+      const hFinPipa = parseFloat(inputDieselHFin.value) || 0;
+      let horasMotorPipa = '';
+      if (inputDieselHIni.value && inputDieselHFin.value && hFinPipa >= hIniPipa) {
+        horasMotorPipa = (hFinPipa - hIniPipa).toFixed(1);
+      }
+
+      const ltsIni = parseFloat(inputDieselLitrosIniciales.value) || 0;
+      const ltsRecibidos = totalRecargasDiesel();
+      const totalDespachado = despachosTurnoDiesel.reduce((a, b) => a + b.litros, 0);
+      const saldoFinal = (ltsIni + ltsRecibidos) - totalDespachado;
+
+      const nuevoReporteDiesel = {
+        id: Date.now().toString(),
+        fechaArchivado: new Date().toISOString(),
+        operador: inputDieselOperador.value.trim(),
+        pipaId: inputDieselPipaId.value.trim(),
+        turno: selectDieselTurno.value,
+        dia: inputDieselDia.value,
+        hIniPipa: inputDieselHIni.value.trim(),
+        hFinPipa: inputDieselHFin.value.trim(),
+        horasMotorPipa: horasMotorPipa,
+        litrosInicialesPipa: ltsIni,
+        litrosRecibidosPipa: ltsRecibidos,
+        recargas: recargasDiesel.map(r => ({ ...r })),
+        totalDespachadoLitros: totalDespachado,
+        saldoFinalPipa: saldoFinal,
+        despachos: [...despachosTurnoDiesel]
+      };
+
+      historialReportesDiesel.unshift(nuevoReporteDiesel);
+      guardarStorage(STORAGE_KEY_HISTORIAL_DIESEL, historialReportesDiesel);
+      renderizarHistorialDiesel();
+
+      // Resetear turno activo diésel
+      despachosTurnoDiesel = [];
+      inputDieselHIni.value = '';
+      inputDieselHFin.value = '';
+      inputDieselLitrosIniciales.value = saldoFinal > 0 ? saldoFinal.toFixed(0) : '';
+      recargasDiesel = [];
+      renderizarRecargasDiesel();
+      inputCLFinal.value = '';
+      calcularHorasMotorPipa();
+      calcularLitrosDespachoActual();
+      renderizarListaDiesel();
+      autoGuardarBorradorDiesel();
+
+      alert('¡Turno de Diésel (Pipa) archivado con éxito!');
+    }
+
+    // --- CONSTRUCTORES CSV Y EXPORTACIÓN ---
+    function construirCSVDemora(reporte) {
       let csv = '\uFEFF';
       csv += 'Item,FECHA,Turno,OPERADOR,EQUIPO,Horometro Inicial,Horometro Final,Horas Motor,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
 
@@ -1045,7 +1820,6 @@
       const turnoCSV = abreviarTurno(reporte.turno);
       const operadorCSV = csvTexto(reporte.nombre || 'N/A');
       const equipoCSV = csvTexto(reporte.equipo || 'N/A');
-
       const hIniCSV = reporte.horometroInicial ? reporte.horometroInicial : '';
       const hFinCSV = reporte.horometroFinal ? reporte.horometroFinal : '';
       const hMotorCSV = reporte.horasMotor ? reporte.horasMotor : '';
@@ -1068,66 +1842,93 @@
           csvTexto(d.comentario)
         ].join(',') + '\n';
       });
-
       return csv;
     }
 
-    function csvTexto(valor) {
-      return `"${String(valor == null ? '' : valor).replace(/"/g, '""')}"`;
+    function construirCSVDiesel(reporte) {
+      let csv = '\uFEFF';
+      csv += 'Item,FECHA,Turno,OPERADOR_PIPA,PIPA,H_Ini_Pipa,H_Fin_Pipa,Horas_Pipa,Lts_Ini_Pipa,Lts_Cargados_Pipa,Saldo_Final_Pipa,PERTENENCIA,EQUIPO_RECEPTOR,Hora_Carga,CuentaLitros_Ini,CuentaLitros_Fin,Litros_Despachados,Horometro_Receptor,Observaciones\n';
+
+      const fechaCSV = formatearFechaDMA(reporte.dia);
+      const turnoCSV = abreviarTurno(reporte.turno);
+      const operadorPipa = csvTexto(reporte.operador || 'N/A');
+      const pipaId = csvTexto(reporte.pipaId || 'PIPA');
+      const hIni = reporte.hIniPipa || '';
+      const hFin = reporte.hFinPipa || '';
+      const hMotor = reporte.horasMotorPipa || '';
+      const ltsIni = reporte.litrosInicialesPipa || 0;
+      const ltsRec = reporte.litrosRecibidosPipa || 0;
+      const saldoFin = reporte.saldoFinalPipa || 0;
+
+      reporte.despachos.forEach((d, idx) => {
+        csv += [
+          idx + 1,
+          fechaCSV,
+          turnoCSV,
+          operadorPipa,
+          pipaId,
+          hIni,
+          hFin,
+          hMotor,
+          ltsIni,
+          ltsRec,
+          saldoFin.toFixed(1),
+          csvTexto(d.pertenencia || 'Mafer'),
+          csvTexto(d.equipo),
+          d.hora,
+          d.clInicial,
+          d.clFinal,
+          d.litros.toFixed(1),
+          csvTexto(d.horometroEquipo || ''),
+          csvTexto(d.nota || '')
+        ].join(',') + '\n';
+      });
+      return csv;
     }
 
-    function formatearFechaDMA(iso) {
-      const partes = String(iso || '').split('-');
-      if (partes.length !== 3) return iso || '';
-      return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-
-    function abreviarTurno(turno) {
-      return /turno\s*1/i.test(turno || '') ? '1RA' : '2DA';
-    }
-
-    function obtenerNombreArchivo(reporte) {
-      const eq = (reporte.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const fecha = (reporte.dia || 'Fecha').replace(/-/g, '');
-      return `Reporte_${eq}_${fecha}.csv`;
-    }
-
-    function descargarBlobCSV(contenido, nombreArchivo) {
-      const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', nombreArchivo);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-
-    // --- DESCARGA Y COMPARTIR POR WHATSAPP ---
-
-    window.descargarCSV = function(index) {
-      const reporte = historialReportes[index];
-      descargarBlobCSV(construirContenidoCSV(reporte), obtenerNombreArchivo(reporte));
-    };
-
-    window.mostrarCSVModal = function(index) {
-      const reporte = historialReportes[index];
-      const contenido = construirContenidoCSV(reporte);
-      const nombreArchivo = obtenerNombreArchivo(reporte);
-
-      csvTemporal = { contenido, nombreArchivo };
+    // --- ACCIONES MODAL CSV Y DESCARGAS ---
+    window.mostrarCSVDemoraModal = function(index) {
+      const rep = historialReportesDemoras[index];
+      const contenido = construirCSVDemora(rep);
+      const nombre = `Reporte_Demoras_${(rep.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
+      csvTemporal = { contenido, nombreArchivo: nombre };
       codigoCSV.textContent = contenido;
+      modalCSVHeader.innerHTML = '<span>📄</span> Reporte Demoras (UTF-8 BOM)';
       modalCSV.classList.remove('hidden');
     };
 
-    window.enviarReporteWhatsApp = async function(index) {
-      const reporte = historialReportes[index];
-      const contenidoCSV = construirContenidoCSV(reporte);
-      const nombreArchivo = obtenerNombreArchivo(reporte);
+    window.descargarCSVDemora = function(index) {
+      const rep = historialReportesDemoras[index];
+      const contenido = construirCSVDemora(rep);
+      const nombre = `Reporte_Demoras_${(rep.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
+      descargarBlobCSV(contenido, nombre);
+    };
+
+    window.mostrarCSVDieselModal = function(index) {
+      const rep = historialReportesDiesel[index];
+      const contenido = construirCSVDiesel(rep);
+      const nombre = `Reporte_Diesel_${(rep.pipaId || 'PIPA').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
+      csvTemporal = { contenido, nombreArchivo: nombre };
+      codigoCSV.textContent = contenido;
+      modalCSVHeader.innerHTML = '<span>⛽</span> Reporte Diésel Pipa (UTF-8 BOM)';
+      modalCSV.classList.remove('hidden');
+    };
+
+    window.descargarCSVDiesel = function(index) {
+      const rep = historialReportesDiesel[index];
+      const contenido = construirCSVDiesel(rep);
+      const nombre = `Reporte_Diesel_${(rep.pipaId || 'PIPA').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
+      descargarBlobCSV(contenido, nombre);
+    };
+
+    // --- ENVIAR POR WHATSAPP ---
+    window.enviarReporteDemoraWhatsApp = async function(index) {
+      const reporte = historialReportesDemoras[index];
+      const contenidoCSV = construirCSVDemora(reporte);
+      const nombreArchivo = `Reporte_Demoras_${(reporte.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(reporte.dia || 'Fecha').replace(/-/g, '')}.csv`;
 
       const totalMin = reporte.demoras.reduce((a, b) => a + b.duracionMin, 0);
-      let mensajeTexto = `*REPORTE DE DEMORAS*\n`;
+      let mensajeTexto = `*REPORTE DE DEMORAS (ACARREO)*\n`;
       mensajeTexto += `🚜 *Equipo:* ${reporte.equipo || 'N/A'}\n`;
       mensajeTexto += `👤 *Operador:* ${reporte.nombre || 'N/A'}\n`;
       mensajeTexto += `📅 *Fecha:* ${formatearFechaDMA(reporte.dia)} (${abreviarTurno(reporte.turno)})\n`;
@@ -1135,7 +1936,6 @@
       if (reporte.horometroInicial && reporte.horometroFinal) {
         mensajeTexto += `⚙️ *Horómetro:* ${reporte.horometroInicial} ➔ ${reporte.horometroFinal} (${reporte.horasMotor || '0'} hrs motor)\n`;
       }
-
       mensajeTexto += `⏱ *Total Demoras:* ${reporte.demoras.length} eventos (${(totalMin / 60).toFixed(2)} hrs)\n\n`;
       mensajeTexto += `*Detalle:* \n`;
       reporte.demoras.forEach(d => {
@@ -1145,36 +1945,143 @@
       try {
         const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
         if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-          await navigator.share({
-            files: [archivo],
-            title: nombreArchivo,
-            text: mensajeTexto,
-          });
+          await navigator.share({ files: [archivo], title: nombreArchivo, text: mensajeTexto });
           return;
         }
       } catch (err) {
         if (err && err.name === 'AbortError') return;
-        console.log('Compartir archivo no disponible, aplicando alternativa.');
       }
-
-      descargarCSV(index);
-      const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`;
-      window.open(urlWhatsApp, '_blank');
+      descargarBlobCSV(contenidoCSV, nombreArchivo);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
     };
 
-    // --- ASIGNACIÓN DE EVENTOS ---
+    window.enviarReporteDieselWhatsApp = async function(index) {
+      const reporte = historialReportesDiesel[index];
+      const contenidoCSV = construirCSVDiesel(reporte);
+      const nombreArchivo = `Reporte_Diesel_${(reporte.pipaId || 'PIPA').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(reporte.dia || 'Fecha').replace(/-/g, '')}.csv`;
+
+      const totalLts = reporte.despachos.reduce((a, b) => a + b.litros, 0);
+      const ltsMafer = reporte.despachos.filter(d => (d.pertenencia || 'Mafer') === 'Mafer').reduce((a, b) => a + b.litros, 0);
+      const ltsEmpresa = reporte.despachos.filter(d => d.pertenencia === 'Empresa').reduce((a, b) => a + b.litros, 0);
+
+      let mensajeTexto = `*CONTROL DE DIÉSEL (PIPA / MARIMBA)*\n`;
+      mensajeTexto += `🚛 *Unidad:* ${reporte.pipaId || 'PIPA'}\n`;
+      mensajeTexto += `👤 *Marimbero:* ${reporte.operador || 'N/A'}\n`;
+      mensajeTexto += `📅 *Fecha:* ${formatearFechaDMA(reporte.dia)} (${abreviarTurno(reporte.turno)})\n`;
+      if (reporte.hIniPipa && reporte.hFinPipa) {
+        mensajeTexto += `⚙️ *Horómetro Pipa:* ${reporte.hIniPipa} ➔ ${reporte.hFinPipa} (${reporte.horasMotorPipa || '0'} hrs)\n`;
+      }
+      mensajeTexto += `🛢 *Inventario Cisterna:*\n`;
+      mensajeTexto += `  • D. Inicial: ${reporte.litrosInicialesPipa.toLocaleString('es-MX')} L\n`;
+      if (reporte.litrosRecibidosPipa > 0) {
+        mensajeTexto += `  • D. Recargado a Pipa: +${reporte.litrosRecibidosPipa.toLocaleString('es-MX')} L\n`;
+        if (Array.isArray(reporte.recargas) && reporte.recargas.length > 1) {
+          reporte.recargas.forEach(r => {
+            mensajeTexto += `    ↳ ${r.hora ? r.hora + ' ' : ''}+${r.litros.toLocaleString('es-MX')} L\n`;
+          });
+        }
+      }
+      mensajeTexto += `  • Total Despachado: -${totalLts.toFixed(1)} L\n`;
+      mensajeTexto += `    ↳ *Mafer:* ${ltsMafer.toFixed(1)} L\n`;
+      mensajeTexto += `    ↳ *Empresa:* ${ltsEmpresa.toFixed(1)} L\n`;
+      mensajeTexto += `  • Saldo Final en Cisterna: ${reporte.saldoFinalPipa.toFixed(1)} L\n\n`;
+
+      mensajeTexto += `*Detalle de Despachos:*\n`;
+      reporte.despachos.forEach(d => {
+        mensajeTexto += `• [${d.pertenencia || 'Mafer'}] *${d.equipo}* (${d.hora}): ${d.litros.toFixed(1)} L | CL: ${d.clInicial}➔${d.clFinal}${d.horometroEquipo ? ` | H:${d.horometroEquipo}` : ''}\n`;
+      });
+
+      try {
+        const archivo = new File([contenidoCSV], nombreArchivo, { type: 'text/csv' });
+        if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+          await navigator.share({ files: [archivo], title: nombreArchivo, text: mensajeTexto });
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+      descargarBlobCSV(contenidoCSV, nombreArchivo);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
+    };
+
+    // --- INICIALIZACIÓN Y ASIGNACIÓN DE EVENTOS ---
+    // La versión anterior guardaba con claves "_v1"; se copian a las nuevas para no perder reportes
+    function migrarClavesAntiguas() {
+      try {
+        [
+          ['app_demoras_borrador_v1', STORAGE_KEY_BORRADOR_DEMORAS],
+          ['app_demoras_historial_v1', STORAGE_KEY_HISTORIAL_DEMORAS]
+        ].forEach(([vieja, nueva]) => {
+          const datoViejo = localStorage.getItem(vieja);
+          if (datoViejo !== null && localStorage.getItem(nueva) === null) {
+            localStorage.setItem(nueva, datoViejo);
+          }
+        });
+      } catch (e) { /* sin almacenamiento disponible */ }
+    }
+
+    function init() {
+      document.getElementById('versionApp').textContent = APP_VERSION;
+      migrarClavesAntiguas();
+      const hoy = fechaLocalISO(new Date());
+      inputDia.value = hoy;
+      inputDieselDia.value = hoy;
+
+      const ahora = new Date();
+      inputHoraInicio.value = formatHora(ahora);
+      inputHoraCargaDiesel.value = formatHora(ahora);
+
+      ahora.setMinutes(ahora.getMinutes() + 30);
+      inputHoraFin.value = formatHora(ahora);
+
+      actualizarCalculoDuracion();
+      renderizarCatalogoModal();
+      renderizarCatalogoEquiposModal();
+
+      // Restaurar Demoras
+      const hayBorradorDem = restaurarBorradorDemoras();
+      if (!hayBorradorDem) seleccionarEquipo(CATALOGO_EQUIPOS[0].id, false);
+      calcularHorasMotorDemoras();
+
+      try {
+        const histDem = localStorage.getItem(STORAGE_KEY_HISTORIAL_DEMORAS);
+        if (histDem) historialReportesDemoras = JSON.parse(histDem) || [];
+      } catch (e) { historialReportesDemoras = []; }
+      renderizarHistorialDemoras();
+
+      // Restaurar Diésel
+      restaurarBorradorDiesel();
+      renderizarRecargasDiesel();
+      calcularHorasMotorPipa();
+      refrescarFormularioDiesel();
+
+      try {
+        const histDie = localStorage.getItem(STORAGE_KEY_HISTORIAL_DIESEL);
+        if (histDie) historialReportesDiesel = JSON.parse(histDie) || [];
+      } catch (e) { historialReportesDiesel = []; }
+      renderizarHistorialDiesel();
+
+      asignarEventos();
+
+      // Abre en la pestaña que se usó la última vez
+      try {
+        if (localStorage.getItem(STORAGE_KEY_PESTANA) === 'diesel') cambiarPestaña('diesel');
+      } catch (e) { /* sin almacenamiento disponible */ }
+    }
 
     function asignarEventos() {
+      // Pestañas
+      tabBtnDemoras.addEventListener('click', () => cambiarPestaña('demoras'));
+      tabBtnDiesel.addEventListener('click', () => cambiarPestaña('diesel'));
+
+      // Eventos Módulo Demoras
       [inputNombre, inputEquipo, selectTurno, inputDia, inputHorometroInicial, inputHorometroFinal].forEach(el => {
-        el.addEventListener('input', autoGuardarBorrador);
-        el.addEventListener('change', autoGuardarBorrador);
+        el.addEventListener('input', autoGuardarBorradorDemoras);
+        el.addEventListener('change', autoGuardarBorradorDemoras);
       });
-
       [inputHorometroInicial, inputHorometroFinal].forEach(el => {
-        el.addEventListener('input', calcularHorasMotor);
-        el.addEventListener('change', calcularHorasMotor);
+        el.addEventListener('input', calcularHorasMotorDemoras);
       });
-
       [inputHoraInicio, inputHoraFin].forEach(el => {
         el.addEventListener('input', actualizarCalculoDuracion);
         el.addEventListener('change', actualizarCalculoDuracion);
@@ -1183,13 +2090,10 @@
       btnAbrirCatalogo.addEventListener('click', () => modalCatalogo.classList.remove('hidden'));
       btnCerrarModal.addEventListener('click', () => modalCatalogo.classList.add('hidden'));
 
-      btnAbrirEquipos.addEventListener('click', () => modalEquipos.classList.remove('hidden'));
-      btnCerrarModalEquipos.addEventListener('click', () => modalEquipos.classList.add('hidden'));
-
-      [modalCatalogo, modalEquipos, modalCSV].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) modal.classList.add('hidden');
-        });
+      btnAbrirEquipos.addEventListener('click', () => {
+        modalEquipoTarget = 'demoras';
+        subtituloModalEquipos.textContent = 'Selecciona el equipo asignado';
+        modalEquipos.classList.remove('hidden');
       });
 
       btnAgregarDemora.addEventListener('click', agregarDemora);
@@ -1197,17 +2101,54 @@
         terminarEdicion();
         renderizarListaDemoras();
       });
-      btnFinalizarTurno.addEventListener('click', finalizarTurno);
+      btnFinalizarTurno.addEventListener('click', finalizarTurnoDemoras);
 
+      // Eventos Módulo Diésel
+      [inputDieselOperador, inputDieselPipaId, selectDieselTurno, inputDieselDia, inputDieselHIni, inputDieselHFin, inputDieselLitrosIniciales, selectDieselPertenencia, inputEquipoReceptorDiesel, inputCLInicial].forEach(el => {
+        el.addEventListener('input', autoGuardarBorradorDiesel);
+        el.addEventListener('change', autoGuardarBorradorDiesel);
+      });
+
+      [inputDieselHIni, inputDieselHFin].forEach(el => {
+        el.addEventListener('input', calcularHorasMotorPipa);
+      });
+
+      inputDieselLitrosIniciales.addEventListener('input', actualizarBalanceDiesel);
+
+      [inputCLInicial, inputCLFinal, inputEquipoReceptorDiesel].forEach(el => {
+        el.addEventListener('input', refrescarFormularioDiesel);
+      });
+
+      btnAgregarRecarga.addEventListener('click', agregarRecargaDiesel);
+      inputRecargaLitros.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); agregarRecargaDiesel(); }
+      });
+      btnCancelarEdicionDiesel.addEventListener('click', () => {
+        terminarEdicionDiesel();
+        renderizarListaDiesel();
+        autoGuardarBorradorDiesel();
+      });
+
+      btnAgregarDespachoDiesel.addEventListener('click', agregarDespachoDiesel);
+      btnFinalizarTurnoDiesel.addEventListener('click', finalizarTurnoDiesel);
+
+      // Modales Generales
+      btnCerrarModalEquipos.addEventListener('click', () => modalEquipos.classList.add('hidden'));
       btnCerrarCSV.addEventListener('click', () => modalCSV.classList.add('hidden'));
       btnDescargarDesdeModal.addEventListener('click', () => {
         descargarBlobCSV(csvTemporal.contenido, csvTemporal.nombreArchivo);
+      });
+
+      [modalCatalogo, modalEquipos, modalCSV].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.add('hidden');
+        });
       });
     }
 
     window.addEventListener('DOMContentLoaded', init);
 
-    // --- SERVICE WORKER (funcionamiento sin conexión) ---
+    // --- SERVICE WORKER (funcionamiento sin conexión y actualización automática) ---
     if ('serviceWorker' in navigator) {
       const teniaControlador = !!navigator.serviceWorker.controller;
       let recargando = false;
@@ -1225,7 +2166,6 @@
           .catch(err => console.error('No se pudo registrar el service worker', err));
       });
     }
-
   </script>
 </body>
 </html>
