@@ -24,6 +24,11 @@
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
+    /* Iconos de línea (sprite SVG en la propia página: funcionan sin internet y toman el color del texto) */
+    .ic { width: 1.1em; height: 1.1em; flex: none; display: inline-block; vertical-align: -0.18em;
+          fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ic-lg { width: 1.35em; height: 1.35em; vertical-align: -0.28em; }
+
     /* Selectores de hora de alta visibilidad (sin separación de letras para que quepa "10:01 PM") */
     input[type="time"] { color-scheme: dark; letter-spacing: 0; }
     input[type="time"]::-webkit-calendar-picker-indicator {
@@ -43,6 +48,33 @@
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex justify-center items-start sm:py-6 sm:px-4 font-sans antialiased">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol id="i-fuel" viewBox="0 0 24 24"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
+<symbol id="i-truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.29 7 8.71 5 8.71-5"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-clipboard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+</defs></svg>
+
 
   <!-- Contenedor Maqueta Móvil -->
   <main class="w-full max-w-md bg-slate-950 sm:rounded-3xl shadow-2xl overflow-clip flex flex-col min-h-screen sm:min-h-[880px] border border-slate-800 relative">
@@ -53,7 +85,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div id="headerIcono" class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
-            ⏱
+            <svg class="ic ic-lg" aria-hidden="true"><use href="#i-timer"/></svg>
           </div>
           <div>
             <h1 id="headerTitulo" class="font-bold text-base text-white tracking-wide leading-tight">Control Operativo</h1>
@@ -73,11 +105,11 @@
     <nav class="flex border-b border-slate-800 bg-slate-900 p-1.5 gap-1.5">
       <button type="button" id="tabBtnDemoras"
         class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm">
-        <span>🚜</span> <span class="truncate">Camiones y Caminos</span>
+        <svg class="ic" aria-hidden="true"><use href="#i-truck"/></svg> <span class="truncate">Camiones y Caminos</span>
       </button>
       <button type="button" id="tabBtnDiesel"
         class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80">
-        <span>⛽</span> <span class="truncate">Captura Diésel (Pipa)</span>
+        <svg class="ic" aria-hidden="true"><use href="#i-fuel"/></svg> <span class="truncate">Captura Diésel (Pipa)</span>
       </button>
     </nav>
     </div>
@@ -87,11 +119,13 @@
     <!-- ========================================================================= -->
     <div id="vistaDemoras" class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4">
 
+      <p id="avisoTurnoViejoDemoras" role="status" class="hidden text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2"></p>
+
       <!-- TARJETA 1: Cabecera de Turno y Horómetros -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <span>📋</span> Datos del Turno (Acarreo)
+            <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> Datos del Turno (Acarreo)
           </h2>
           <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Auto-guardado</span>
         </div>
@@ -111,7 +145,7 @@
                 <span id="labelEquipoId" class="font-bold text-amber-400 text-sm">CV-173</span>
                 <span id="labelEquipoTipo" class="text-slate-300 text-xs ml-1.5 truncate">CAMION VOLTEO</span>
               </div>
-              <span class="text-slate-500 text-xs pl-2">▼</span>
+              <span class="text-slate-500 pl-2"><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
             </button>
             <input type="hidden" id="inputEquipo" value="CV-173" />
           </div>
@@ -120,13 +154,13 @@
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Turno</label>
             <select id="selectTurno"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors">
-              <option value="Turno 1 (Día)">Turno 1ra (Día)</option>
-              <option value="Turno 2 (Noche)">Turno 2da (Noche)</option>
+              <option value="Turno 1 (Día)">1ra (Día)</option>
+              <option value="Turno 2 (Noche)">2da (Noche)</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha</label>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha del turno</label>
             <input type="date" id="inputDia"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
@@ -135,7 +169,7 @@
           <div class="col-span-2 pt-2 mt-1 border-t border-slate-800/80">
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-[11px] font-semibold text-slate-300 flex items-center gap-1">
-                <span>⚙️</span> Horómetro de Motor
+                <svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg> Horómetro de Motor
               </label>
               <span id="badgeHorasMotor" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                 0.0 hrs motor
@@ -154,7 +188,7 @@
             </div>
 
             <p id="alertaErrorHorometro" class="text-[11px] text-red-400 mt-1.5 hidden flex items-center gap-1 font-medium">
-              <span>⚠️</span> El horómetro final no puede ser menor que el inicial.
+              <svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg> El horómetro final no puede ser menor que el inicial.
             </p>
           </div>
         </div>
@@ -164,7 +198,7 @@
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <span>⚠️</span> Registrar Demora
+            <svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg> Registrar Demora
           </h2>
           <span id="duracionBadge" class="text-[11px] font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">0 min (0.00 h)</span>
         </div>
@@ -174,7 +208,7 @@
           <div class="grid grid-cols-2 gap-2.5 bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
             <div class="bg-amber-950/30 p-2 rounded-xl border border-amber-500/20">
               <label class="flex items-center justify-between text-[11px] font-bold text-amber-400 mb-1 tracking-wide">
-                <span class="flex items-center gap-1"><span>🕒</span> Hora Inicial</span>
+                <span class="flex items-center gap-1"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg> Hora Inicial</span>
                 <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold uppercase">Inicio</span>
               </label>
               <input type="time" id="inputHoraInicio"
@@ -183,7 +217,7 @@
 
             <div class="bg-emerald-950/30 p-2 rounded-xl border border-emerald-500/20">
               <label class="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1 tracking-wide">
-                <span class="flex items-center gap-1"><span>🏁</span> Hora Final</span>
+                <span class="flex items-center gap-1"><svg class="ic" aria-hidden="true"><use href="#i-flag"/></svg> Hora Final</span>
                 <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-semibold uppercase">Fin</span>
               </label>
               <input type="time" id="inputHoraFin"
@@ -200,7 +234,7 @@
                 <span id="labelCodigoActivo" class="font-bold text-amber-400 text-sm">200</span>
                 <span id="labelDescActiva" class="text-slate-300 text-xs ml-1.5 truncate">Ingreso/ salida de personal</span>
               </div>
-              <span class="text-slate-500 text-xs pl-2">▼</span>
+              <span class="text-slate-500 pl-2"><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
             </button>
           </div>
 
@@ -217,7 +251,7 @@
           <!-- Botón Agregar / Guardar Demora -->
           <button type="button" id="btnAgregarDemora"
             class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-amber-500/30 transition-all shadow-sm">
-            <span id="iconoBtnAgregar">➕</span> <span id="textoBtnAgregar">Agregar a la Jornada</span>
+            <span id="iconoBtnAgregar" class="inline-flex"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span> <span id="textoBtnAgregar">Agregar a la Jornada</span>
           </button>
           <button type="button" id="btnCancelarEdicion"
             class="hidden w-full text-slate-400 hover:text-white text-xs font-semibold py-2 rounded-xl border border-slate-700/80">
@@ -246,7 +280,7 @@
         <div id="panelCierreTurno" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
           <button type="button" id="btnFinalizarTurno"
             class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg transition-all">
-            <span>💾</span> Finalizar y Archivar Turno
+            <svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> Finalizar y Archivar Turno
           </button>
         </div>
       </section>
@@ -255,7 +289,7 @@
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <span>📦</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-package"/></svg>
             <span>Reportes en Memoria Local (<span id="contadorHistorial">0</span>)</span>
           </h2>
           <span class="text-[10px] text-slate-400">Listos p/ WhatsApp</span>
@@ -275,11 +309,13 @@
     <!-- ========================================================================= -->
     <div id="vistaDiesel" class="flex-1 overflow-y-auto scrollbar-none p-4 space-y-4 hidden">
 
+      <p id="avisoTurnoViejoDiesel" role="status" class="hidden text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2"></p>
+
       <!-- TARJETA 1 DIESEL: Datos del Turno de la Pipa -->
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-            <span>🛢</span> Turno Pipa / Marimba
+            <svg class="ic" aria-hidden="true"><use href="#i-droplet"/></svg> Turno Pipa / Marimba
           </h2>
           <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Auto-guardado</span>
         </div>
@@ -301,13 +337,13 @@
             <label class="block text-[11px] font-medium text-slate-400 mb-1">Turno</label>
             <select id="selectDieselTurno"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors">
-              <option value="Turno 1 (Día)">Turno 1ra (Día)</option>
-              <option value="Turno 2 (Noche)">Turno 2da (Noche)</option>
+              <option value="Turno 1 (Día)">1ra (Día)</option>
+              <option value="Turno 2 (Noche)">2da (Noche)</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha</label>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Fecha del turno</label>
             <input type="date" id="inputDieselDia"
               class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors" />
           </div>
@@ -316,7 +352,7 @@
           <div class="col-span-2 pt-2 border-t border-slate-800/80">
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-semibold text-slate-300 flex items-center gap-1">
-                <span>⚙️</span> Horómetro de Pipa
+                <svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg> Horómetro de Pipa
               </label>
               <span id="badgeDieselHorasMotor" class="text-[11px] font-mono font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                 0.0 hrs motor
@@ -333,7 +369,7 @@
           <!-- Inventario de Diésel de la Pipa -->
           <div class="col-span-2 pt-2 border-t border-slate-800/80">
             <label class="block text-[11px] font-semibold text-sky-400 mb-1 flex items-center gap-1">
-              <span>⛽</span> Inventario Cisterna (Litros)
+              <svg class="ic" aria-hidden="true"><use href="#i-fuel"/></svg> Inventario Cisterna (Litros)
             </label>
             <div class="grid grid-cols-2 gap-2.5">
               <div>
@@ -352,7 +388,7 @@
                 class="flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-emerald-300 font-mono text-center focus:outline-none focus:border-sky-500" />
               <button type="button" id="btnAgregarRecarga"
                 class="shrink-0 bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-emerald-300 font-semibold px-3 py-2 rounded-xl text-xs border border-emerald-500/30">
-                ➕ Recarga
+                <svg class="ic mr-1" aria-hidden="true"><use href="#i-plus"/></svg> Recarga
               </button>
             </div>
             <div id="listaRecargasDiesel" class="flex flex-wrap gap-1.5 mt-2"></div>
@@ -364,7 +400,7 @@
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-            <span>🎯</span> Registrar Despacho a Equipo
+            <svg class="ic" aria-hidden="true"><use href="#i-target"/></svg> Registrar Despacho a Equipo
           </h2>
           <span id="badgeLitrosDespacho" class="text-[11px] font-mono font-bold text-sky-300 bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 rounded">
             0.0 Lts
@@ -393,7 +429,7 @@
 
           <!-- Hora del Despacho -->
           <div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800">
-            <label class="block text-[11px] font-bold text-emerald-400 mb-1">🕒 Hora del Despacho</label>
+            <label class="block text-[11px] font-bold text-emerald-400 mb-1"><svg class="ic mr-1" aria-hidden="true"><use href="#i-clock"/></svg> Hora del Despacho</label>
             <input type="time" id="inputHoraCargaDiesel"
               class="w-full bg-slate-900 border-2 border-emerald-500/60 rounded-xl px-3 py-2 text-base font-bold text-emerald-300 text-center font-mono cursor-pointer" />
           </div>
@@ -402,7 +438,7 @@
           <div class="bg-sky-950/30 p-2.5 rounded-2xl border border-sky-500/30 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-sky-300 flex items-center gap-1">
-                <span>🔢</span> Cuenta-Litros (Flujómetro)
+                <svg class="ic" aria-hidden="true"><use href="#i-hash"/></svg> Cuenta-Litros (Flujómetro)
               </span>
               <span class="text-[10px] text-slate-400">Lectura de bomba</span>
             </div>
@@ -439,7 +475,7 @@
           <p id="avisoSaldoDiesel" role="status" class="hidden text-[11px] font-medium rounded-xl px-3 py-2"></p>
           <button type="button" id="btnAgregarDespachoDiesel"
             class="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-sky-300 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5 border border-sky-500/30 transition-all shadow-sm">
-            <span id="iconoBtnDespacho">➕</span> <span id="textoBtnDespacho">Registrar Carga de Diésel</span>
+            <span id="iconoBtnDespacho" class="inline-flex"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span> <span id="textoBtnDespacho">Registrar Carga de Diésel</span>
           </button>
           <button type="button" id="btnCancelarEdicionDiesel"
             class="hidden w-full text-slate-400 hover:text-white text-xs font-semibold py-2 rounded-xl border border-slate-700/80">
@@ -480,7 +516,7 @@
         <div id="panelCierreTurnoDiesel" class="mt-4 pt-3 border-t border-slate-800/80 hidden">
           <button type="button" id="btnFinalizarTurnoDiesel"
             class="w-full bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg transition-all">
-            <span>💾</span> Finalizar y Archivar Turno Pipa
+            <svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> Finalizar y Archivar Turno Pipa
           </button>
         </div>
       </section>
@@ -489,7 +525,7 @@
       <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm mb-6">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <span>📦</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-package"/></svg>
             <span>Reportes Pipa Almacenados (<span id="contadorHistorialDiesel">0</span>)</span>
           </h2>
           <span class="text-[10px] text-slate-400">Listos p/ WhatsApp</span>
@@ -504,7 +540,7 @@
 
     </div>
 
-    <p class="text-center text-[10px] text-slate-600 pb-3">Versión <span id="versionApp"></span></p>
+    <p class="text-center text-[10px] text-slate-600 pb-3">Versión <span id="versionApp"></span> · By: Jorge Coss</p>
 
     <!-- ========================================================================= -->
     <!-- MODALES GLOBALES                                                          -->
@@ -518,7 +554,7 @@
             <h3 class="text-base font-bold text-white">Catálogo de Demoras</h3>
             <p class="text-xs text-slate-400">Selecciona el código correspondiente</p>
           </div>
-          <button id="btnCerrarModal" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
+          <button id="btnCerrarModal" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
         <div id="listaOpcionesCatalogo" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none"></div>
       </div>
@@ -532,7 +568,7 @@
             <h3 class="text-base font-bold text-white">Catálogo de Equipos</h3>
             <p id="subtituloModalEquipos" class="text-xs text-slate-400">Selecciona el equipo</p>
           </div>
-          <button id="btnCerrarModalEquipos" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white">✕</button>
+          <button id="btnCerrarModalEquipos" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm font-bold hover:text-white"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
         <div id="listaOpcionesEquipos" class="overflow-y-auto py-2 space-y-1.5 flex-1 scrollbar-none"></div>
       </div>
@@ -543,9 +579,9 @@
       <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-4 flex flex-col max-h-[80vh]">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <h3 id="modalCSVHeader" class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
-            <span>📄</span> Contenido CSV Nativo (UTF-8 BOM)
+            <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> Contenido CSV Nativo (UTF-8 BOM)
           </h3>
-          <button id="btnCerrarCSV" class="text-slate-400 hover:text-white text-base">✕</button>
+          <button id="btnCerrarCSV" class="text-slate-400 hover:text-white text-base"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
         <pre id="codigoCSV" class="flex-1 my-3 bg-slate-950 p-3 rounded-xl text-[11px] font-mono text-emerald-300 overflow-x-auto overflow-y-auto border border-slate-800/80 whitespace-pre"></pre>
         <button id="btnDescargarDesdeModal" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
@@ -635,9 +671,9 @@
     let codigoActivo = CATALOGO[0].codigo;
     let equipoActivoDemoras = CATALOGO_EQUIPOS[0].id;
     // Duración del turno en horas (se usa para avisar si las demoras suman más que el turno)
-    const DURACION_TURNO_HORAS = 12;
+    const DURACION_TURNO_HORAS = 10; // 1ra 07:00–17:00 · 2da 19:00–05:00
     // Debe coincidir con VERSION de sw.js
-    const APP_VERSION = 'v8';
+    const APP_VERSION = 'v12';
     const STORAGE_KEY_PESTANA = 'app_pestana_activa';
 
     let demorasTurno = [];
@@ -717,6 +753,8 @@
     const inputHorometroEquipoReceptor = document.getElementById('inputHorometroEquipoReceptor');
     const inputNotaDiesel = document.getElementById('inputNotaDiesel');
     const btnAgregarDespachoDiesel = document.getElementById('btnAgregarDespachoDiesel');
+    const avisoTurnoViejoDemoras = document.getElementById('avisoTurnoViejoDemoras');
+    const avisoTurnoViejoDiesel = document.getElementById('avisoTurnoViejoDiesel');
     const iconoBtnDespacho = document.getElementById('iconoBtnDespacho');
     const textoBtnDespacho = document.getElementById('textoBtnDespacho');
     const btnCancelarEdicionDiesel = document.getElementById('btnCancelarEdicionDiesel');
@@ -756,6 +794,11 @@
     let csvTemporal = { contenido: '', nombreArchivo: '' };
 
     // --- UTILIDADES ---
+    // Icono del sprite (para texto generado desde JavaScript)
+    function ic(nombre, extra) {
+      return '<svg class="ic' + (extra ? ' ' + extra : '') + '" aria-hidden="true"><use href="#i-' + nombre + '"/></svg>';
+    }
+
     function escaparHTML(texto) {
       return String(texto == null ? '' : texto)
         .replace(/&/g, '&amp;')
@@ -800,6 +843,54 @@
       return /turno\s*1/i.test(turno || '') ? '1RA' : '2DA';
     }
 
+    // --- FECHA OPERATIVA (del turno) vs. FECHA REAL (del calendario) ---
+    // 1ra: 07:00–17:00 (todo el mismo día). 2da: 19:00–05:00 (cruza la medianoche).
+    // La fecha operativa es la del día en que EMPEZÓ el turno; las horas de 00:00 a 11:59
+    // de un turno de 2da ya pertenecen al día siguiente del calendario.
+    function sumarDiasISO(iso, dias) {
+      const [y, m, d] = String(iso).split('-').map(Number);
+      return fechaLocalISO(new Date(y, m - 1, d + dias));
+    }
+
+    function fechaRealDeHora(diaOperativo, turno, hora) {
+      if (!diaOperativo || !hora) return diaOperativo || '';
+      const esNoche = !/turno\s*1/i.test(turno || '');
+      return (esNoche && horaAMinutos(hora) < 12 * 60) ? sumarDiasISO(diaOperativo, 1) : diaOperativo;
+    }
+
+    // Fecha del turno que le corresponde a "ahora": de madrugada, el turno de 2da sigue siendo el de ayer
+    function fechaOperativaSugerida(turno) {
+      const ahora = new Date();
+      const hoy = fechaLocalISO(ahora);
+      const esNoche = !/turno\s*1/i.test(turno || '');
+      return (esNoche && ahora.getHours() < 12) ? sumarDiasISO(hoy, -1) : hoy;
+    }
+
+    // 1ra termina a las 17:00 del mismo día; 2da a las 05:00 del día siguiente (con 30 min de margen para archivar)
+    function turnoTerminado(dia, turno) {
+      if (!dia) return false;
+      const [y, m, d] = dia.split('-').map(Number);
+      const esNoche = !/turno\s*1/i.test(turno || '');
+      const fin = esNoche ? new Date(y, m - 1, d + 1, 5, 30) : new Date(y, m - 1, d, 17, 30);
+      return new Date() > fin;
+    }
+
+    // Turno que corresponde a esta hora: 1ra de 07:00 a 18:59, 2da el resto
+    function turnoSugerido() {
+      const h = new Date().getHours();
+      return (h >= 7 && h < 19) ? 'Turno 1 (Día)' : 'Turno 2 (Noche)';
+    }
+
+    function actualizarAvisoTurnoViejo() {
+      const revisar = (hayDatos, dia, turno, el) => {
+        const viejo = hayDatos && turnoTerminado(dia, turno);
+        el.innerHTML = viejo ? ic('warn') + ' ' + escaparHTML(`Hay un turno de ${abreviarTurno(turno)} del ${formatearFechaDMA(dia)} sin archivar. Archívalo antes de capturar el siguiente.`) : '';
+        el.classList.toggle('hidden', !viejo);
+      };
+      revisar(demorasTurno.length > 0, inputDia.value, selectTurno.value, avisoTurnoViejoDemoras);
+      revisar(despachosTurnoDiesel.length > 0, inputDieselDia.value, selectDieselTurno.value, avisoTurnoViejoDiesel);
+    }
+
     function descargarBlobCSV(contenido, nombreArchivo) {
       const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -823,7 +914,7 @@
         tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm';
         tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
 
-        headerIcono.textContent = '⏱';
+        headerIcono.innerHTML = ic('timer', 'ic-lg');
         headerIcono.className = 'w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base';
         headerTitulo.textContent = 'Control Operativo';
         headerSubtitulo.textContent = 'Camiones y Mantenimiento';
@@ -834,7 +925,7 @@
         tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow-sm';
         tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
 
-        headerIcono.textContent = '⛽';
+        headerIcono.innerHTML = ic('fuel', 'ic-lg');
         headerIcono.className = 'w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-base';
         headerTitulo.textContent = 'Control de Diésel';
         headerSubtitulo.textContent = 'Pipa y Despacho en Campo';
@@ -929,17 +1020,17 @@
         } else {
           const otra = buscarSolape(inicio, fin, editandoId);
           if (otra) {
-            mensaje = `⚠️ Se empalma con la demora de ${otra.horaInicio} a ${otra.horaFin} (código ${otra.codigo}).`;
+            mensaje = `Se empalma con la demora de ${otra.horaInicio} a ${otra.horaFin} (código ${otra.codigo}).`;
           }
         }
       }
-      avisoDemora.textContent = mensaje;
+      avisoDemora.innerHTML = mensaje ? ic('warn') + ' ' + escaparHTML(mensaje) : '';
       avisoDemora.classList.toggle('hidden', !mensaje);
     }
 
     function actualizarTextoBoton() {
       const editando = editandoId !== null;
-      iconoBtnAgregar.textContent = editando ? '💾' : '➕';
+      iconoBtnAgregar.innerHTML = ic(editando ? 'save' : 'plus');
       textoBtnAgregar.textContent = solapeConfirmado
         ? (editando ? 'Guardar de todos modos' : 'Agregar de todos modos')
         : (editando ? 'Guardar cambios' : 'Agregar a la Jornada');
@@ -1038,10 +1129,10 @@
       excesoDiesel = e.exceso;
       if (!e.exceso) saldoDieselConfirmado = false;
       if (e.exceso) {
-        avisoSaldoDiesel.textContent = `⚠️ Este despacho (${e.lts.toFixed(1)} L) supera el saldo de la pipa (${Math.max(e.saldo, 0).toFixed(1)} L). Revisa el cuenta-litros o toca otra vez para registrar de todos modos.`;
+        avisoSaldoDiesel.innerHTML = ic('warn') + ' ' + escaparHTML(`Este despacho (${e.lts.toFixed(1)} L) supera el saldo de la pipa (${Math.max(e.saldo, 0).toFixed(1)} L). Revisa el cuenta-litros o toca otra vez para registrar de todos modos.`);
         avisoSaldoDiesel.className = 'text-[11px] font-medium rounded-xl px-3 py-2 text-amber-300 bg-amber-500/10 border border-amber-500/30';
       } else if (e.sinInventario) {
-        avisoSaldoDiesel.textContent = 'ℹ️ Captura el diésel inicial de la pipa para controlar el saldo.';
+        avisoSaldoDiesel.innerHTML = ic('info') + ' Captura el diésel inicial de la pipa para controlar el saldo.';
         avisoSaldoDiesel.className = 'text-[11px] font-medium rounded-xl px-3 py-2 text-sky-300 bg-sky-500/10 border border-sky-500/30';
       } else {
         avisoSaldoDiesel.className = 'hidden';
@@ -1052,7 +1143,7 @@
     function actualizarTextoBotonDiesel() {
       const editando = editandoDespachoId !== null;
       const confirmando = saldoDieselConfirmado && excesoDiesel;
-      iconoBtnDespacho.textContent = confirmando ? '⚠️' : (editando ? '💾' : '➕');
+      iconoBtnDespacho.innerHTML = ic(confirmando ? 'warn' : (editando ? 'save' : 'plus'));
       textoBtnDespacho.textContent = confirmando
         ? 'Registrar de todos modos'
         : (editando ? 'Guardar cambios' : 'Registrar Carga de Diésel');
@@ -1072,7 +1163,7 @@
       if (!texto.trim()) { avisoEquipoDiesel.className = 'hidden'; return; }
       const r = resolverEquipoDiesel(texto);
       if (r.catalogo) {
-        avisoEquipoDiesel.textContent = `✓ ${r.catalogo.id} · ${r.catalogo.tipo}`;
+        avisoEquipoDiesel.innerHTML = ic('check') + ' ' + escaparHTML(`${r.catalogo.id} · ${r.catalogo.tipo}`);
         avisoEquipoDiesel.className = 'text-[11px] font-medium rounded-lg px-2.5 py-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/30';
       } else {
         avisoEquipoDiesel.textContent = `No está en la lista de equipos: se guardará como "${r.nombre}".`;
@@ -1187,7 +1278,7 @@
             </div>
             <p class="text-xs text-slate-200 mt-0.5">${item.desc}</p>
           </div>
-          <span class="text-slate-500 text-xs">Elegir →</span>
+          <span class="text-slate-500 text-xs inline-flex items-center gap-1">Elegir <svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
         `;
         listaOpcionesCatalogo.appendChild(div);
       });
@@ -1216,7 +1307,7 @@
             <span class="font-bold text-white text-xs font-mono">${eq.id}</span>
             <p class="text-xs text-slate-400 mt-0.5">${eq.tipo}</p>
           </div>
-          <span class="text-slate-500 text-xs">Elegir →</span>
+          <span class="text-slate-500 text-xs inline-flex items-center gap-1">Elegir <svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
         `;
         listaOpcionesEquipos.appendChild(div);
 
@@ -1250,6 +1341,7 @@
       totalTiempoAcumulado.className = 'text-xs font-bold ' + (excede ? 'text-red-400' : 'text-amber-400');
       avisoTotalTurno.textContent = `Las demoras suman más de ${DURACION_TURNO_HORAS} h, la duración del turno. Revisa que ninguna esté repetida.`;
       avisoTotalTurno.classList.toggle('hidden', !excede);
+      actualizarAvisoTurnoViejo();
 
       const items = contenedorListaDemoras.querySelectorAll('.item-demora');
       items.forEach(el => el.remove());
@@ -1278,8 +1370,8 @@
             ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${escaparHTML(item.comentario)}"</p>` : ''}
           </div>
           <div class="flex items-center">
-            <button onclick="editarDemora(${index})" aria-label="Editar demora" class="text-slate-500 hover:text-amber-300 px-2 py-1 text-sm font-bold">✎</button>
-            <button onclick="eliminarDemora(${index})" aria-label="Eliminar demora" class="text-slate-500 hover:text-red-400 px-2 py-1 text-sm font-bold">✕</button>
+            <button onclick="editarDemora(${index})" aria-label="Editar demora" class="text-slate-500 hover:text-amber-300 px-2 py-1 text-sm font-bold">${ic('pencil', 'ic-lg')}</button>
+            <button onclick="eliminarDemora(${index})" aria-label="Eliminar demora" class="text-slate-500 hover:text-red-400 px-2 py-1 text-sm font-bold">${ic('x', 'ic-lg')}</button>
           </div>
         `;
         contenedorListaDemoras.appendChild(div);
@@ -1309,7 +1401,7 @@
               <p class="text-[11px] text-slate-400">${escaparHTML(rep.dia)} • ${escaparHTML(rep.turno)} • ${escaparHTML(rep.nombre || 'Operador N/A')}</p>
               ${tieneHorometros ? `
                 <p class="text-[10px] text-amber-300 font-mono flex items-center gap-1 pt-0.5">
-                  <span>⚙️</span> H: ${escaparHTML(rep.horometroInicial)} ➔ ${escaparHTML(rep.horometroFinal)} (${escaparHTML(rep.horasMotor || '0')} hrs motor)
+                  <svg class="ic" aria-hidden="true"><use href="#i-gauge"/></svg> H: ${escaparHTML(rep.horometroInicial)} ${ic('arrow-right')} ${escaparHTML(rep.horometroFinal)} (${escaparHTML(rep.horasMotor || '0')} hrs motor)
                 </p>
               ` : ''}
             </div>
@@ -1320,7 +1412,7 @@
           <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
             <button onclick="enviarReporteDemoraWhatsApp(${idx})"
               class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm">
-              <span>💬</span> WhatsApp
+              <svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp
             </button>
             <button onclick="mostrarCSVDemoraModal(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
@@ -1328,10 +1420,10 @@
             </button>
             <button onclick="descargarCSVDemora(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-amber-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar">
-              ⬇
+              ${ic('download', 'ic-lg')}
             </button>
             <button onclick="eliminarReporteDemoraHistorial(${idx})" class="text-slate-600 hover:text-red-400 p-2 text-xs">
-              🗑
+              ${ic('trash', 'ic-lg')}
             </button>
           </div>
         `;
@@ -1343,6 +1435,7 @@
     function renderizarListaDiesel() {
       contadorDespachosDiesel.textContent = despachosTurnoDiesel.length;
       actualizarBalanceDiesel();
+      actualizarAvisoTurnoViejo();
 
       const items = contenedorListaDiesel.querySelectorAll('.item-despacho-diesel');
       items.forEach(el => el.remove());
@@ -1375,14 +1468,14 @@
               <span class="text-xs font-bold font-mono text-emerald-400">${item.litros.toFixed(1)} L</span>
             </div>
             <p class="text-[11px] text-slate-300 mt-1 font-mono">
-              CL: ${escaparHTML(item.clInicial)} ➔ ${escaparHTML(item.clFinal)}
+              CL: ${escaparHTML(item.clInicial)} ${ic('arrow-right')} ${escaparHTML(item.clFinal)}
               ${item.horometroEquipo ? `<span class="text-slate-400 ml-1.5">(H: ${escaparHTML(item.horometroEquipo)})</span>` : ''}
             </p>
             ${item.nota ? `<p class="text-[10px] text-slate-400 italic mt-0.5">"${escaparHTML(item.nota)}"</p>` : ''}
           </div>
           <div class="flex items-center shrink-0">
-            <button onclick="editarDespachoDiesel(${index})" aria-label="Editar despacho" class="text-slate-500 hover:text-sky-400 p-1.5 text-sm">✏️</button>
-            <button onclick="eliminarDespachoDiesel(${index})" aria-label="Eliminar despacho" class="text-slate-500 hover:text-red-400 p-1.5 text-sm font-bold">✕</button>
+            <button onclick="editarDespachoDiesel(${index})" aria-label="Editar despacho" class="text-slate-500 hover:text-sky-400 p-1.5 text-sm">${ic('pencil', 'ic-lg')}</button>
+            <button onclick="eliminarDespachoDiesel(${index})" aria-label="Eliminar despacho" class="text-slate-500 hover:text-red-400 p-1.5 text-sm font-bold">${ic('x', 'ic-lg')}</button>
           </div>
         `;
         contenedorListaDiesel.appendChild(div);
@@ -1426,7 +1519,7 @@
           <div class="flex items-center gap-1.5 pt-1 border-t border-slate-900">
             <button onclick="enviarReporteDieselWhatsApp(${idx})"
               class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-sm">
-              <span>💬</span> WhatsApp
+              <svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg> WhatsApp
             </button>
             <button onclick="mostrarCSVDieselModal(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-2.5 rounded-lg text-xs font-semibold">
@@ -1434,10 +1527,10 @@
             </button>
             <button onclick="descargarCSVDiesel(${idx})"
               class="bg-slate-800 hover:bg-slate-700 text-sky-400 py-2 px-2.5 rounded-lg text-xs font-semibold" title="Descargar">
-              ⬇
+              ${ic('download', 'ic-lg')}
             </button>
             <button onclick="eliminarReporteDieselHistorial(${idx})" class="text-slate-600 hover:text-red-400 p-2 text-xs">
-              🗑
+              ${ic('trash', 'ic-lg')}
             </button>
           </div>
         `;
@@ -1585,6 +1678,7 @@
       renderizarHistorialDemoras();
 
       demorasTurno = [];
+      inputDia.value = fechaOperativaSugerida(selectTurno.value);
       editandoId = null;
       inputHorometroInicial.value = '';
       inputHorometroFinal.value = '';
@@ -1644,7 +1738,7 @@
         const chip = document.createElement('span');
         chip.className = 'recarga-diesel inline-flex items-center gap-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono rounded-lg pl-2 pr-0.5 py-0.5';
         chip.innerHTML = `${r.hora ? escaparHTML(r.hora) + ' ' : ''}+${r.litros.toLocaleString('es-MX', { maximumFractionDigits: 1 })} L
-          <button onclick="eliminarRecargaDiesel('${escaparHTML(String(r.id))}')" aria-label="Quitar recarga" class="text-slate-500 hover:text-red-400 px-1.5 py-0.5">✕</button>`;
+          <button onclick="eliminarRecargaDiesel('${escaparHTML(String(r.id))}')" aria-label="Quitar recarga" class="text-slate-500 hover:text-red-400 px-1.5 py-0.5">${ic('x')}</button>`;
         listaRecargasDiesel.appendChild(chip);
       });
       actualizarBalanceDiesel();
@@ -1797,6 +1891,7 @@
 
       // Resetear turno activo diésel
       despachosTurnoDiesel = [];
+      inputDieselDia.value = fechaOperativaSugerida(selectDieselTurno.value);
       inputDieselHIni.value = '';
       inputDieselHFin.value = '';
       inputDieselLitrosIniciales.value = saldoFinal > 0 ? saldoFinal.toFixed(0) : '';
@@ -1814,7 +1909,7 @@
     // --- CONSTRUCTORES CSV Y EXPORTACIÓN ---
     function construirCSVDemora(reporte) {
       let csv = '\uFEFF';
-      csv += 'Item,FECHA,Turno,OPERADOR,EQUIPO,Horometro Inicial,Horometro Final,Horas Motor,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
+      csv += 'Item,FECHA,FECHA_REAL,Turno,OPERADOR,EQUIPO,Horometro Inicial,Horometro Final,Horas Motor,Hora Inicio,Hora Fin,Duracion (min),Codigo,Descripcion,Comentarios\n';
 
       const fechaCSV = formatearFechaDMA(reporte.dia);
       const turnoCSV = abreviarTurno(reporte.turno);
@@ -1828,6 +1923,7 @@
         csv += [
           idx + 1,
           fechaCSV,
+          formatearFechaDMA(fechaRealDeHora(reporte.dia, reporte.turno, d.horaInicio)),
           turnoCSV,
           operadorCSV,
           equipoCSV,
@@ -1847,7 +1943,7 @@
 
     function construirCSVDiesel(reporte) {
       let csv = '\uFEFF';
-      csv += 'Item,FECHA,Turno,OPERADOR_PIPA,PIPA,H_Ini_Pipa,H_Fin_Pipa,Horas_Pipa,Lts_Ini_Pipa,Lts_Cargados_Pipa,Saldo_Final_Pipa,PERTENENCIA,EQUIPO_RECEPTOR,Hora_Carga,CuentaLitros_Ini,CuentaLitros_Fin,Litros_Despachados,Horometro_Receptor,Observaciones\n';
+      csv += 'Item,FECHA,FECHA_REAL,Turno,OPERADOR_PIPA,PIPA,H_Ini_Pipa,H_Fin_Pipa,Horas_Pipa,Lts_Ini_Pipa,Lts_Cargados_Pipa,Saldo_Final_Pipa,PERTENENCIA,EQUIPO_RECEPTOR,Hora_Carga,CuentaLitros_Ini,CuentaLitros_Fin,Litros_Despachados,Horometro_Receptor,Observaciones\n';
 
       const fechaCSV = formatearFechaDMA(reporte.dia);
       const turnoCSV = abreviarTurno(reporte.turno);
@@ -1864,6 +1960,7 @@
         csv += [
           idx + 1,
           fechaCSV,
+          formatearFechaDMA(fechaRealDeHora(reporte.dia, reporte.turno, d.hora)),
           turnoCSV,
           operadorPipa,
           pipaId,
@@ -1893,7 +1990,7 @@
       const nombre = `Reporte_Demoras_${(rep.equipo || 'Equipo').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
       csvTemporal = { contenido, nombreArchivo: nombre };
       codigoCSV.textContent = contenido;
-      modalCSVHeader.innerHTML = '<span>📄</span> Reporte Demoras (UTF-8 BOM)';
+      modalCSVHeader.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> Reporte Demoras (UTF-8 BOM)';
       modalCSV.classList.remove('hidden');
     };
 
@@ -1910,7 +2007,7 @@
       const nombre = `Reporte_Diesel_${(rep.pipaId || 'PIPA').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(rep.dia || 'Fecha').replace(/-/g, '')}.csv`;
       csvTemporal = { contenido, nombreArchivo: nombre };
       codigoCSV.textContent = contenido;
-      modalCSVHeader.innerHTML = '<span>⛽</span> Reporte Diésel Pipa (UTF-8 BOM)';
+      modalCSVHeader.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-fuel"/></svg> Reporte Diésel Pipa (UTF-8 BOM)';
       modalCSV.classList.remove('hidden');
     };
 
@@ -2061,6 +2158,11 @@
       } catch (e) { historialReportesDiesel = []; }
       renderizarHistorialDiesel();
 
+      // Turno vacío: se propone el turno y la fecha que corresponden a esta hora; un turno terminado con datos queda marcado
+      if (demorasTurno.length === 0) { selectTurno.value = turnoSugerido(); inputDia.value = fechaOperativaSugerida(selectTurno.value); }
+      if (despachosTurnoDiesel.length === 0) { selectDieselTurno.value = turnoSugerido(); inputDieselDia.value = fechaOperativaSugerida(selectDieselTurno.value); }
+      actualizarAvisoTurnoViejo();
+
       asignarEventos();
 
       // Abre en la pestaña que se usó la última vez
@@ -2102,6 +2204,17 @@
         renderizarListaDemoras();
       });
       btnFinalizarTurno.addEventListener('click', finalizarTurnoDemoras);
+
+      // Turno vacío: la fecha se ajusta sola al cambiar de turno (ej. 2da de madrugada = fecha de ayer)
+      selectTurno.addEventListener('change', () => {
+        if (demorasTurno.length === 0) { inputDia.value = fechaOperativaSugerida(selectTurno.value); autoGuardarBorradorDemoras(); }
+        actualizarAvisoTurnoViejo();
+      });
+      selectDieselTurno.addEventListener('change', () => {
+        if (despachosTurnoDiesel.length === 0) { inputDieselDia.value = fechaOperativaSugerida(selectDieselTurno.value); autoGuardarBorradorDiesel(); }
+        actualizarAvisoTurnoViejo();
+      });
+      [inputDia, inputDieselDia].forEach(el => el.addEventListener('change', actualizarAvisoTurnoViejo));
 
       // Eventos Módulo Diésel
       [inputDieselOperador, inputDieselPipaId, selectDieselTurno, inputDieselDia, inputDieselHIni, inputDieselHFin, inputDieselLitrosIniciales, selectDieselPertenencia, inputEquipoReceptorDiesel, inputCLInicial].forEach(el => {

@@ -1,6 +1,6 @@
-// Service worker: guarda la app en el dispositivo para que abra sin internet.
-// Si publicas cambios, sube el número de VERSION para que los teléfonos se actualicen.
-const VERSION = 'v8';
+// Service worker: guarda la app en el dispositivo para que abra al instante y sin internet.
+// Cada vez que publiques cambios, sube el número de VERSION (y APP_VERSION en index.html).
+const VERSION = 'v12';
 const CACHE = `demoras-${VERSION}`;
 
 const ARCHIVOS = [
@@ -13,10 +13,11 @@ const ARCHIVOS = [
   './icons/icon-maskable-512.png'
 ];
 
+// Instalación: se guarda una copia fresca de todos los archivos (saltando la caché HTTP de GitHub)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(ARCHIVOS))
+      .then((cache) => cache.addAll(ARCHIVOS.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -33,31 +34,34 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Siempre se responde con la copia guardada, sin esperar a la red. Así la app abre al instante
+// aunque la red móvil deje la conexión colgada (la causa de que "no cargara nada").
+// En segundo plano se intenta renovar la copia para la siguiente vez que se abra.
 self.addEventListener('fetch', (event) => {
   const peticion = event.request;
-
-  // Solo se gestionan lecturas del mismo origen (WhatsApp y otros sitios van directo a la red)
   if (peticion.method !== 'GET') return;
   const url = new URL(peticion.url);
   if (url.origin !== self.location.origin) return;
 
-  // Red primero (siempre la versión más nueva, sin usar copias viejas del navegador).
-  // Si no hay conexión, se usa la copia guardada en el dispositivo.
+  const esPagina = peticion.mode === 'navigate';
+  const clave = esPagina ? './index.html' : peticion;
+
   event.respondWith(
-    fetch(peticion, { cache: 'no-cache' })
-      .then((respuesta) => {
-        if (respuesta && respuesta.status === 200) {
-          const copia = respuesta.clone();
-          caches.open(CACHE).then((cache) => cache.put(peticion, copia));
-        }
-        return respuesta;
-      })
-      .catch(() =>
-        caches.match(peticion, { ignoreSearch: true }).then((guardada) => {
-          if (guardada) return guardada;
-          if (peticion.mode === 'navigate') return caches.match('./index.html');
-          return Response.error();
+    caches.open(CACHE).then(async (cache) => {
+      const guardada = await cache.match(clave, { ignoreSearch: true });
+
+      const renovar = fetch(esPagina ? './index.html' : peticion, { cache: 'no-cache' })
+        .then((respuesta) => {
+          if (respuesta && respuesta.status === 200) cache.put(clave, respuesta.clone());
+          return respuesta;
         })
-      )
+        .catch(() => null);
+
+      if (guardada) {
+        event.waitUntil(renovar);   // se renueva en segundo plano; no retrasa la respuesta
+        return guardada;
+      }
+      return (await renovar) || Response.error();   // primera vez sin copia: hay que ir a la red
+    })
   );
 });
