@@ -1,6 +1,6 @@
 // Service worker: guarda la app en el dispositivo para que abra al instante y sin internet.
 // Cada vez que publiques cambios, sube el número de VERSION (y APP_VERSION en index.html).
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = `demoras-${VERSION}`;
 
 const ARCHIVOS = [

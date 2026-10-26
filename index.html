@@ -21,6 +21,9 @@
   <style>
     body { -webkit-tap-highlight-color: transparent; user-select: none; }
     input, textarea, select { user-select: text; }
+    /* Evita que jalar la pantalla hacia abajo recargue la app y borre lo que se está capturando */
+    html, body { overscroll-behavior-y: none; }
+    #vistaDemoras, #vistaDiesel { overscroll-behavior-y: contain; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -48,6 +51,14 @@
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex justify-center items-start sm:py-6 sm:px-4 font-sans antialiased">
+<div id="avisoNavegadorViejo" style="display:none;background:#b45309;color:#fff;font:600 13px/1.4 system-ui,sans-serif;padding:12px 16px;text-align:center">
+  Este teléfono tiene un navegador muy antiguo y la app puede verse mal o no funcionar. Actualiza "Google Chrome" y "Android System WebView" desde Play Store.
+</div>
+<script>
+  if (!(window.CSS && CSS.supports && CSS.supports('color', 'oklch(0.5 0.1 200)') && CSS.supports('color', 'color-mix(in srgb, red 50%, blue)'))) {
+    document.getElementById('avisoNavegadorViejo').style.display = 'block';
+  }
+</script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
 <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
@@ -104,11 +115,11 @@
     <!-- NAVEGACIÓN ENTRE MÓDULOS (PESTAÑAS SUPERIORES) -->
     <nav class="flex border-b border-slate-800 bg-slate-900 p-1.5 gap-1.5">
       <button type="button" id="tabBtnDemoras"
-        class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm">
+        class="flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm">
         <svg class="ic" aria-hidden="true"><use href="#i-truck"/></svg> <span class="truncate">Camiones y Caminos</span>
       </button>
       <button type="button" id="tabBtnDiesel"
-        class="flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80">
+        class="flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80">
         <svg class="ic" aria-hidden="true"><use href="#i-fuel"/></svg> <span class="truncate">Captura Diésel (Pipa)</span>
       </button>
     </nav>
@@ -384,7 +395,7 @@
               </div>
             </div>
             <div class="flex gap-2 mt-2">
-              <input type="number" step="1" min="0" inputmode="decimal" id="inputRecargaLitros" placeholder="Lts de la recarga"
+              <input type="number" step="1" min="0" inputmode="decimal" id="inputRecargaLitros" placeholder="Lts de recarga"
                 class="flex-1 min-w-0 bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-emerald-300 font-mono text-center focus:outline-none focus:border-sky-500" />
               <button type="button" id="btnAgregarRecarga"
                 class="shrink-0 bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-emerald-300 font-semibold px-3 py-2 rounded-xl text-xs border border-emerald-500/30">
@@ -490,7 +501,7 @@
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">
             Despachos Realizados (<span id="contadorDespachosDiesel">0</span>)
           </h2>
-          <span id="totalLitrosDespachados" class="text-xs font-bold text-sky-400">Total: 0.0 L</span>
+          <span id="totalLitrosDespachados" class="text-xs font-bold text-sky-400 whitespace-nowrap">Total: 0.0 L</span>
         </div>
 
         <!-- Balance en Pipa -->
@@ -538,6 +549,11 @@
         </div>
       </section>
 
+    </div>
+
+    <div id="bannerActualizacion" role="status" class="hidden fixed bottom-3 left-3 right-3 z-40 mx-auto max-w-sm bg-sky-600 text-white text-xs font-semibold rounded-xl shadow-lg px-3 py-2.5 flex items-center justify-between gap-3">
+      <span>Hay una versión nueva de la app.</span>
+      <button type="button" id="btnActualizarAhora" class="bg-white text-sky-700 font-bold rounded-lg px-3 py-1.5">Actualizar</button>
     </div>
 
     <p class="text-center text-[10px] text-slate-600 pb-3">Versión <span id="versionApp"></span> · By: Jorge Coss</p>
@@ -673,7 +689,7 @@
     // Duración del turno en horas (se usa para avisar si las demoras suman más que el turno)
     const DURACION_TURNO_HORAS = 10; // 1ra 07:00–17:00 · 2da 19:00–05:00
     // Debe coincidir con VERSION de sw.js
-    const APP_VERSION = 'v12';
+    const APP_VERSION = 'v13';
     const STORAGE_KEY_PESTANA = 'app_pestana_activa';
 
     let demorasTurno = [];
@@ -821,16 +837,49 @@
       return `${h}:${m}`;
     }
 
+    let avisoAlmacenamientoMostrado = false;
     function guardarStorage(clave, valor) {
       try {
         localStorage.setItem(clave, JSON.stringify(valor));
       } catch (e) {
         console.error('Error guardando en almacenamiento local', e);
+        if (!avisoAlmacenamientoMostrado) {
+          avisoAlmacenamientoMostrado = true;
+          alert('No se pudo guardar en el teléfono (almacenamiento lleno o bloqueado). Envía por WhatsApp los reportes pendientes y borra los reportes archivados que ya no necesites.');
+        }
       }
     }
 
+    // Lee una lista guardada; si está dañada o incompleta, la ignora en vez de romper la app
+    function leerListaGuardada(clave, validar) {
+      try {
+        const bruto = localStorage.getItem(clave);
+        if (!bruto) return [];
+        const lista = JSON.parse(bruto);
+        return Array.isArray(lista) ? lista.filter(x => x && typeof x === 'object' && validar(x)) : [];
+      } catch (e) { return []; }
+    }
+
+    // Texto para CSV. Si empieza con = + - @ Excel lo tomaría como fórmula; un espacio al inicio lo evita
     function csvTexto(valor) {
-      return `"${String(valor == null ? '' : valor).replace(/"/g, '""')}"`;
+      let t = String(valor == null ? '' : valor);
+      if (/^[=+\-@\t\r]/.test(t)) t = ' ' + t;
+      return `"${t.replace(/"/g, '""')}"`;
+    }
+
+    // Distancia en días entre la fecha del turno (AAAA-MM-DD) y hoy
+    function diasDesdeHoy(iso) {
+      const [y, m, d] = String(iso).split('-').map(Number);
+      const a = new Date(y, m - 1, d), h = new Date(); h.setHours(0, 0, 0, 0);
+      return Math.round((a - h) / 86400000);
+    }
+
+    // Revisa fecha y nombre antes de archivar. Devuelve true si se puede continuar.
+    function confirmarDatosDeTurno(dia, nombre, etiquetaNombre) {
+      if (!dia) { alert('Falta la fecha del turno. Captúrala antes de archivar.'); return false; }
+      if (Math.abs(diasDesdeHoy(dia)) > 1 && !confirm(`La fecha del turno (${formatearFechaDMA(dia)}) es distinta a la de hoy. ¿Archivar con esa fecha?`)) return false;
+      if (!nombre && !confirm(`No capturaste ${etiquetaNombre}. ¿Archivar de todos modos?`)) return false;
+      return true;
     }
 
     function formatearFechaDMA(iso) {
@@ -891,6 +940,12 @@
       revisar(despachosTurnoDiesel.length > 0, inputDieselDia.value, selectDieselTurno.value, avisoTurnoViejoDiesel);
     }
 
+    function abrirWhatsAppTexto(texto) {
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      const ventana = window.open(url, '_blank');
+      if (!ventana) window.location.href = url;   // el navegador bloqueó la ventana: se abre en esta misma pestaña
+    }
+
     function descargarBlobCSV(contenido, nombreArchivo) {
       const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -911,8 +966,8 @@
         vistaDemoras.classList.remove('hidden');
         vistaDiesel.classList.add('hidden');
 
-        tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm';
-        tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
+        tabBtnDemoras.className = 'flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow-sm';
+        tabBtnDiesel.className = 'flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
 
         headerIcono.innerHTML = ic('timer', 'ic-lg');
         headerIcono.className = 'w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base';
@@ -922,8 +977,8 @@
         vistaDemoras.classList.add('hidden');
         vistaDiesel.classList.remove('hidden');
 
-        tabBtnDiesel.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow-sm';
-        tabBtnDemoras.className = 'flex-1 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
+        tabBtnDiesel.className = 'flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow-sm';
+        tabBtnDemoras.className = 'flex-1 min-w-0 py-2 px-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-slate-800/80';
 
         headerIcono.innerHTML = ic('fuel', 'ic-lg');
         headerIcono.className = 'w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-base';
@@ -1019,8 +1074,11 @@
           mensaje = 'La hora final es igual a la inicial. Corrígela para registrar la demora.';
         } else {
           const otra = buscarSolape(inicio, fin, editandoId);
+          const durMin = calcularDiferenciaMinutos(inicio, fin);
           if (otra) {
             mensaje = `Se empalma con la demora de ${otra.horaInicio} a ${otra.horaFin} (código ${otra.codigo}).`;
+          } else if (durMin > DURACION_TURNO_HORAS * 60) {
+            mensaje = `Esta demora dura ${(durMin / 60).toFixed(1)} h, más que el turno. Si la hora final es menor que la inicial, se toma como si pasara de medianoche.`;
           }
         }
       }
@@ -1086,7 +1144,7 @@
 
     function actualizarBalanceDiesel() {
       const ltsIniPipa = parseFloat(inputDieselLitrosIniciales.value) || 0;
-      const capacidadTotal = ltsIniPipa + totalRecargasDiesel();
+      const capacidadTotal = Math.max(0, ltsIniPipa) + totalRecargasDiesel();
 
       const totalDespachado = despachosTurnoDiesel.reduce((acc, curr) => acc + curr.litros, 0);
       const saldoFinal = capacidadTotal - totalDespachado;
@@ -1112,7 +1170,7 @@
       const ini = parseFloat(inputCLInicial.value);
       const fin = parseFloat(inputCLFinal.value);
       const lts = (Number.isFinite(ini) && Number.isFinite(fin) && fin > ini) ? (fin - ini) : 0;
-      const capacidad = (parseFloat(inputDieselLitrosIniciales.value) || 0) + totalRecargasDiesel();
+      const capacidad = Math.max(0, parseFloat(inputDieselLitrosIniciales.value) || 0) + totalRecargasDiesel();
       const yaDespachado = despachosTurnoDiesel
         .filter(d => d.id !== editandoDespachoId)
         .reduce((acc, d) => acc + d.litros, 0);
@@ -1367,7 +1425,7 @@
               <span class="text-[10px] text-slate-400">${item.duracionMin} min</span>
             </div>
             <p class="text-xs text-slate-300 mt-1 font-medium truncate">${escaparHTML(item.descripcion)}</p>
-            ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic">"${escaparHTML(item.comentario)}"</p>` : ''}
+            ${item.comentario ? `<p class="text-[11px] text-slate-400 mt-0.5 italic break-words [overflow-wrap:anywhere]">"${escaparHTML(item.comentario)}"</p>` : ''}
           </div>
           <div class="flex items-center">
             <button onclick="editarDemora(${index})" aria-label="Editar demora" class="text-slate-500 hover:text-amber-300 px-2 py-1 text-sm font-bold">${ic('pencil', 'ic-lg')}</button>
@@ -1461,17 +1519,17 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-xs font-bold text-white font-mono">${escaparHTML(item.equipo)}</span>
+                <span class="text-xs font-bold text-white font-mono break-words [overflow-wrap:anywhere] min-w-0">${escaparHTML(item.equipo)}</span>
                 <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${escaparHTML(item.pertenencia || 'Mafer')}</span>
                 <span class="text-[10px] text-slate-400">${escaparHTML(item.hora)}</span>
               </div>
-              <span class="text-xs font-bold font-mono text-emerald-400">${item.litros.toFixed(1)} L</span>
+              <span class="text-xs font-bold font-mono text-emerald-400 whitespace-nowrap pl-2">${item.litros.toFixed(1)} L</span>
             </div>
             <p class="text-[11px] text-slate-300 mt-1 font-mono">
               CL: ${escaparHTML(item.clInicial)} ${ic('arrow-right')} ${escaparHTML(item.clFinal)}
               ${item.horometroEquipo ? `<span class="text-slate-400 ml-1.5">(H: ${escaparHTML(item.horometroEquipo)})</span>` : ''}
             </p>
-            ${item.nota ? `<p class="text-[10px] text-slate-400 italic mt-0.5">"${escaparHTML(item.nota)}"</p>` : ''}
+            ${item.nota ? `<p class="text-[10px] text-slate-400 italic mt-0.5 break-words [overflow-wrap:anywhere]">"${escaparHTML(item.nota)}"</p>` : ''}
           </div>
           <div class="flex items-center shrink-0">
             <button onclick="editarDespachoDiesel(${index})" aria-label="Editar despacho" class="text-slate-500 hover:text-sky-400 p-1.5 text-sm">${ic('pencil', 'ic-lg')}</button>
@@ -1540,6 +1598,9 @@
 
     // --- ACCIONES Y REGISTROS: DEMORAS ---
     window.eliminarDemora = function(index) {
+      const d = demorasTurno[index];
+      if (!d) return;
+      if (!confirm(`¿Quitar la demora de ${d.horaInicio} a ${d.horaFin}?`)) return;
       const estabaEditando = demorasTurno[index] && demorasTurno[index].id === editandoId;
       demorasTurno.splice(index, 1);
       if (estabaEditando) terminarEdicion();
@@ -1583,7 +1644,11 @@
       }
     };
 
+    // Un doble toque accidental no debe registrar dos demoras
+    let ultimaDemoraAgregadaMs = 0;
+
     function agregarDemora() {
+      if (Date.now() - ultimaDemoraAgregadaMs < 350) return;
       const inicio = inputHoraInicio.value;
       const fin = inputHoraFin.value;
       if (!inicio || !fin) {
@@ -1598,7 +1663,8 @@
       }
 
       // Empalme con otra demora: el primer toque avisa, el segundo confirma
-      if (buscarSolape(inicio, fin, editandoId) && !solapeConfirmado) {
+      const demasiadoLarga = calcularDiferenciaMinutos(inicio, fin) > DURACION_TURNO_HORAS * 60;
+      if ((buscarSolape(inicio, fin, editandoId) || demasiadoLarga) && !solapeConfirmado) {
         solapeConfirmado = true;
         actualizarTextoBoton();
         return;
@@ -1628,6 +1694,7 @@
       }
 
       demorasTurno.push({ id: Date.now().toString(), ...datos });
+      ultimaDemoraAgregadaMs = Date.now();
       renderizarListaDemoras();
       autoGuardarBorradorDemoras();
 
@@ -1659,6 +1726,10 @@
           deltaHoras = (hFin - hIni).toFixed(1);
         }
       }
+
+      if (!confirmarDatosDeTurno(inputDia.value, inputNombre.value.trim(), 'el nombre del operador')) return;
+      const totalMinArch = demorasTurno.reduce((a, d) => a + d.duracionMin, 0);
+      if (!confirm(`¿Archivar el turno con ${demorasTurno.length} demora(s), ${(totalMinArch / 60).toFixed(2)} h en total?`)) return;
 
       const nuevoReporte = {
         id: Date.now().toString(),
@@ -1693,6 +1764,8 @@
     // --- ACCIONES Y REGISTROS: DIÉSEL ---
     window.eliminarDespachoDiesel = function(index) {
       const quitado = despachosTurnoDiesel[index];
+      if (!quitado) return;
+      if (!confirm(`¿Quitar el despacho a ${quitado.equipo} (${quitado.litros.toFixed(1)} L)?`)) return;
       if (quitado && quitado.id === editandoDespachoId) terminarEdicionDiesel();
       despachosTurnoDiesel.splice(index, 1);
       renderizarListaDiesel();
@@ -1796,8 +1869,12 @@
       const clIni = parseFloat(clIniStr);
       const clFin = parseFloat(clFinStr);
 
-      if (isNaN(clIni) || isNaN(clFin) || clFin < clIni) {
+      if (isNaN(clIni) || isNaN(clFin) || clFin < clIni || clIni < 0) {
         alert('Lectura inválida: El cuenta-litros final no puede ser menor que el inicial.');
+        return;
+      }
+      if (clFin === clIni) {
+        alert('El cuenta-litros final es igual al inicial: no hay litros despachados. Revisa la lectura.');
         return;
       }
 
@@ -1854,6 +1931,9 @@
       }
 
       if (editandoDespachoId !== null) terminarEdicionDiesel();
+      if (!confirmarDatosDeTurno(inputDieselDia.value, inputDieselOperador.value.trim(), 'el nombre del marimbero')) return;
+      const totalLtsArch = despachosTurnoDiesel.reduce((a, d) => a + d.litros, 0);
+      if (!confirm(`¿Archivar el turno de la pipa con ${despachosTurnoDiesel.length} despacho(s), ${totalLtsArch.toFixed(1)} L en total?`)) return;
 
       const hIniPipa = parseFloat(inputDieselHIni.value) || 0;
       const hFinPipa = parseFloat(inputDieselHFin.value) || 0;
@@ -1862,7 +1942,7 @@
         horasMotorPipa = (hFinPipa - hIniPipa).toFixed(1);
       }
 
-      const ltsIni = parseFloat(inputDieselLitrosIniciales.value) || 0;
+      const ltsIni = Math.max(0, parseFloat(inputDieselLitrosIniciales.value) || 0);
       const ltsRecibidos = totalRecargasDiesel();
       const totalDespachado = despachosTurnoDiesel.reduce((a, b) => a + b.litros, 0);
       const saldoFinal = (ltsIni + ltsRecibidos) - totalDespachado;
@@ -2049,7 +2129,7 @@
         if (err && err.name === 'AbortError') return;
       }
       descargarBlobCSV(contenidoCSV, nombreArchivo);
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
+      abrirWhatsAppTexto(mensajeTexto);
     };
 
     window.enviarReporteDieselWhatsApp = async function(index) {
@@ -2098,7 +2178,7 @@
         if (err && err.name === 'AbortError') return;
       }
       descargarBlobCSV(contenidoCSV, nombreArchivo);
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
+      abrirWhatsAppTexto(mensajeTexto);
     };
 
     // --- INICIALIZACIÓN Y ASIGNACIÓN DE EVENTOS ---
@@ -2140,10 +2220,7 @@
       if (!hayBorradorDem) seleccionarEquipo(CATALOGO_EQUIPOS[0].id, false);
       calcularHorasMotorDemoras();
 
-      try {
-        const histDem = localStorage.getItem(STORAGE_KEY_HISTORIAL_DEMORAS);
-        if (histDem) historialReportesDemoras = JSON.parse(histDem) || [];
-      } catch (e) { historialReportesDemoras = []; }
+      historialReportesDemoras = leerListaGuardada(STORAGE_KEY_HISTORIAL_DEMORAS, r => Array.isArray(r.demoras));
       renderizarHistorialDemoras();
 
       // Restaurar Diésel
@@ -2152,10 +2229,7 @@
       calcularHorasMotorPipa();
       refrescarFormularioDiesel();
 
-      try {
-        const histDie = localStorage.getItem(STORAGE_KEY_HISTORIAL_DIESEL);
-        if (histDie) historialReportesDiesel = JSON.parse(histDie) || [];
-      } catch (e) { historialReportesDiesel = []; }
+      historialReportesDiesel = leerListaGuardada(STORAGE_KEY_HISTORIAL_DIESEL, r => Array.isArray(r.despachos));
       renderizarHistorialDiesel();
 
       // Turno vacío: se propone el turno y la fecha que corresponden a esta hora; un turno terminado con datos queda marcado
@@ -2267,11 +2341,23 @@
       let recargando = false;
 
       // Cuando una versión nueva toma el control, se recarga una vez para mostrarla
+      // Algo a medio capturar que todavía no se guarda en el borrador
+      const hayCapturaEnCurso = () =>
+        editandoId !== null || editandoDespachoId !== null ||
+        [inputComentario, inputCLFinal, inputNotaDiesel, inputHorometroEquipoReceptor, inputRecargaLitros]
+          .some(el => el.value.trim() !== '');
+
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!teniaControlador || recargando) return;
+        if (hayCapturaEnCurso()) {
+          // No se interrumpe al operador: se avisa y se actualiza cuando él quiera
+          document.getElementById('bannerActualizacion').classList.remove('hidden');
+          return;
+        }
         recargando = true;
         window.location.reload();
       });
+      document.getElementById('btnActualizarAhora').addEventListener('click', () => window.location.reload());
 
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
