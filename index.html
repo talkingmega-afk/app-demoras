@@ -23,7 +23,6 @@
     input, textarea, select { user-select: text; }
     /* Evita que jalar la pantalla hacia abajo recargue la app y borre lo que se está capturando */
     html, body { overscroll-behavior-y: none; }
-    #vistaDemoras, #vistaDiesel { overscroll-behavior-y: contain; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -689,7 +688,7 @@
     // Duración del turno en horas (se usa para avisar si las demoras suman más que el turno)
     const DURACION_TURNO_HORAS = 10; // 1ra 07:00–17:00 · 2da 19:00–05:00
     // Debe coincidir con VERSION de sw.js
-    const APP_VERSION = 'v13';
+    const APP_VERSION = 'v14';
     const STORAGE_KEY_PESTANA = 'app_pestana_activa';
 
     let demorasTurno = [];
